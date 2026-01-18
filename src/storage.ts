@@ -44,14 +44,7 @@ export async function getStorageInfo(): Promise<{ mode: StorageMode; path: strin
   return detectStorageMode();
 }
 
-const DEFAULT_TARGETS: Target[] = [
-  {
-    id: crypto.randomUUID(),
-    name: "Demo TMS Server",
-    host: "demo.tradex.com.sg",
-    port: 11000,
-  },
-];
+const DEFAULT_TARGETS: Target[] = [];
 
 export async function loadTargets(): Promise<Target[]> {
   try {

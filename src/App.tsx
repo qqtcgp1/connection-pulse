@@ -475,11 +475,16 @@ export default function App() {
             <li><strong>DOWN:</strong> &lt;70% success</li>
           </ul>
 
-          <h3>Storage ({storageMode === "portable" ? "Portable Mode" : "AppData Mode"})</h3>
+          <h3>Storage ({storageMode === "portable" ? "Portable Mode" : "System Mode"})</h3>
           <p className="storage-path">{storagePath}</p>
           <ul>
             <li><strong>Portable:</strong> Place <code>targets.json</code> next to the exe to use portable mode</li>
-            <li><strong>AppData:</strong> Default mode - saves to system AppData folder</li>
+            <li><strong>System (default):</strong></li>
+            <ul>
+              <li>Windows: <code>%APPDATA%/com.connection-pulse.app/</code></li>
+              <li>macOS: <code>~/Library/Application Support/com.connection-pulse.app/</code></li>
+              <li>Linux: <code>~/.config/com.connection-pulse.app/</code></li>
+            </ul>
             <li><strong>Auto-save:</strong> Changes saved immediately on add/edit/delete</li>
           </ul>
 
