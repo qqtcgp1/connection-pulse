@@ -56,12 +56,14 @@ jobs:
           releaseBody: |
             ## Downloads
 
-            | Platform | File |
-            |----------|------|
-            | Windows | `connection-pulse_*_x64-setup.exe` |
-            | macOS (Intel) | `Connection.Pulse_*_x64.dmg` |
-            | macOS (Apple Silicon) | `Connection.Pulse_*_aarch64.dmg` |
-            | Linux | `connection-pulse_*_amd64.AppImage` |
+            | Platform | File | Status |
+            |----------|------|--------|
+            | Windows | `connection-pulse_*_x64-setup.exe` | Stable |
+            | macOS (Intel) | `Connection.Pulse_*_x64.dmg` | Experimental |
+            | macOS (Apple Silicon) | `Connection.Pulse_*_aarch64.dmg` | Experimental |
+            | Linux | `connection-pulse_*_amd64.AppImage` | Experimental |
+
+            > **Note:** macOS and Linux builds are experimental and untested. Feedback and bug reports welcome!
           releaseDraft: false
           prerelease: false
           args: --target ${{ matrix.target }}
