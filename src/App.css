@@ -76,38 +76,47 @@ button.small {
   font-size: 12px;
 }
 
-.order-col {
-  width: 90px;
+.drag-col {
+  width: 30px;
 }
 
-.order-cell {
-  white-space: nowrap;
+.drag-handle {
+  cursor: grab;
+  color: #555;
+  font-size: 16px;
+  text-align: center;
+  user-select: none;
 }
 
-.move-btn {
-  background: transparent;
-  border: 1px solid #444;
+.drag-handle:hover {
   color: #888;
-  padding: 2px 6px;
-  font-size: 10px;
-  cursor: pointer;
-  border-radius: 3px;
-  margin-right: 2px;
 }
 
-.move-btn:hover:not(:disabled) {
-  background: #333;
-  color: #ccc;
+tr[draggable="true"]:active .drag-handle {
+  cursor: grabbing;
 }
 
-.move-btn:disabled {
-  opacity: 0.3;
-  cursor: not-allowed;
+tr.dragging {
+  opacity: 0.5;
 }
 
-.move-btn.double {
-  letter-spacing: -3px;
-  padding-right: 8px;
+tr.drop-end-zone {
+  background: #1a1a1a;
+}
+
+tr.drop-end-zone td {
+  text-align: center;
+  color: #666;
+  font-size: 12px;
+  padding: 8px;
+  border: 2px dashed #333;
+  border-radius: 4px;
+}
+
+tr.drop-end-zone:hover td {
+  background: #1e3a5f;
+  border-color: #2563eb;
+  color: #888;
 }
 
 .actions-cell {

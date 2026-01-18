@@ -1,8 +1,8 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { open } from "@tauri-apps/plugin-dialog";
-import { readTextFile } from "@tauri-apps/plugin-fs";
+import { open, save } from "@tauri-apps/plugin-dialog";
+import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import type { Target, ProbeResult, TargetStats } from "./types";
 import { loadTargets, saveTargets, parseTargetsJson, getStorageInfo, StorageMode } from "./storage";
 
@@ -47,6 +47,7 @@ export default function App() {
   const [storageMode, setStorageMode] = useState<StorageMode>("appdata");
   const [storagePath, setStoragePath] = useState<string>("");
   const [showInfo, setShowInfo] = useState(false);
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load targets and storage info on mount
@@ -82,37 +83,44 @@ export default function App() {
     };
   }, []);
 
-  // Listen for drag-drop
-  useEffect(() => {
-    const unlistenDrop = listen<{ paths: string[] }>("tauri://drag-drop", async (event) => {
+  // HTML5 file drop handlers
+  const handleFileDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    // Only show overlay for external file drops, not internal row drags
+    if (e.dataTransfer.types.includes("Files")) {
+      setDragOver(true);
+    }
+  };
+
+  const handleFileDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    // Only hide if leaving the app container
+    if (e.currentTarget === e.target) {
       setDragOver(false);
-      const paths = event.payload.paths || [];
-      const jsonPath = paths.find((p) => p.toLowerCase().endsWith(".json"));
-      if (!jsonPath) return;
+    }
+  };
 
-      try {
-        const txt = await readTextFile(jsonPath);
-        const imported = parseTargetsJson(txt);
-        if (imported && imported.length > 0) {
-          setTargets(imported);
-          await saveTargets(imported);
-          await invoke("set_targets", { targets: imported });
-          setResults(new Map());
-        }
-      } catch (e) {
-        console.error("Failed to import:", e);
+  const handleFileDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+
+    const files = Array.from(e.dataTransfer.files);
+    const jsonFile = files.find((f) => f.name.toLowerCase().endsWith(".json"));
+    if (!jsonFile) return;
+
+    try {
+      const txt = await jsonFile.text();
+      const imported = parseTargetsJson(txt);
+      if (imported && imported.length > 0) {
+        setTargets(imported);
+        await saveTargets(imported);
+        await invoke("set_targets", { targets: imported });
+        setResults(new Map());
       }
-    });
-
-    const unlistenEnter = listen("tauri://drag-enter", () => setDragOver(true));
-    const unlistenLeave = listen("tauri://drag-leave", () => setDragOver(false));
-
-    return () => {
-      unlistenDrop.then((fn) => fn());
-      unlistenEnter.then((fn) => fn());
-      unlistenLeave.then((fn) => fn());
-    };
-  }, []);
+    } catch (e) {
+      console.error("Failed to import:", e);
+    }
+  };
 
   const handleSaveTargets = useCallback(async (newTargets: Target[]) => {
     setTargets(newTargets);
@@ -182,24 +190,48 @@ export default function App() {
     setResults(new Map());
   };
 
-  const handleMove = (index: number, direction: "up" | "down" | "top" | "bottom") => {
-    let newIndex: number;
-    if (direction === "up" && index > 0) {
-      newIndex = index - 1;
-    } else if (direction === "down" && index < targets.length - 1) {
-      newIndex = index + 1;
-    } else if (direction === "top" && index > 0) {
-      newIndex = 0;
-    } else if (direction === "bottom" && index < targets.length - 1) {
-      newIndex = targets.length - 1;
-    } else {
-      return;
+  const handleRowDragStart = (e: React.DragEvent<HTMLTableRowElement>, index: number) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", String(index));
+    // Make the drag image semi-transparent
+    if (e.currentTarget) {
+      e.currentTarget.style.opacity = "0.5";
     }
+  };
+
+  const handleRowDragEnd = (e: React.DragEvent<HTMLTableRowElement>) => {
+    setDraggedIndex(null);
+    if (e.currentTarget) {
+      e.currentTarget.style.opacity = "1";
+    }
+  };
+
+  const handleRowDrop = (e: React.DragEvent<HTMLTableRowElement>, dropIndex: number) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === dropIndex) return;
 
     const newTargets = [...targets];
-    const [removed] = newTargets.splice(index, 1);
-    newTargets.splice(newIndex, 0, removed);
+    const [removed] = newTargets.splice(draggedIndex, 1);
+    // When dragging down, adjust for the shifted indices
+    const insertIndex = draggedIndex < dropIndex ? dropIndex - 1 : dropIndex;
+    newTargets.splice(insertIndex, 0, removed);
     setTargets(newTargets);
+    setDraggedIndex(null);
+    // Save in background
+    saveTargets(newTargets);
+    invoke("set_targets", { targets: newTargets });
+  };
+
+  const handleDropToEnd = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === targets.length - 1) return;
+
+    const newTargets = [...targets];
+    const [removed] = newTargets.splice(draggedIndex, 1);
+    newTargets.push(removed);
+    setTargets(newTargets);
+    setDraggedIndex(null);
     // Save in background
     saveTargets(newTargets);
     invoke("set_targets", { targets: newTargets });
@@ -228,15 +260,19 @@ export default function App() {
     }
   };
 
-  const handleExportFile = () => {
-    const json = JSON.stringify(targets, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "targets.json";
-    a.click();
-    URL.revokeObjectURL(url);
+  const handleExportFile = async () => {
+    const path = await save({
+      defaultPath: "targets.json",
+      filters: [{ name: "JSON", extensions: ["json"] }],
+    });
+    if (!path) return;
+
+    try {
+      const json = JSON.stringify(targets, null, 2);
+      await writeTextFile(path, json);
+    } catch (e) {
+      console.error("Failed to export:", e);
+    }
   };
 
   // Compute stats for each target
@@ -257,7 +293,12 @@ export default function App() {
   const fmtPct = (v: number | null) => (v === null ? "—" : `${Math.round(v * 100)}%`);
 
   return (
-    <div className={`app ${dragOver ? "drag-over" : ""}`}>
+    <div
+      className={`app ${dragOver ? "drag-over" : ""}`}
+      onDragOver={handleFileDragOver}
+      onDragLeave={handleFileDragLeave}
+      onDrop={handleFileDrop}
+    >
       <header>
         <h1>Network Tester</h1>
         <div className="actions">
@@ -327,6 +368,7 @@ export default function App() {
           <table>
             <thead>
               <tr>
+                <th className="drag-col"></th>
                 <th>Name</th>
                 <th>Host:Port</th>
                 <th>Health</th>
@@ -335,12 +377,23 @@ export default function App() {
                 <th>p90</th>
                 <th>Success (5m)</th>
                 <th>Actions</th>
-                <th className="order-col">Order</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody
+              onDragOver={(e) => e.preventDefault()}
+              onDragEnter={(e) => e.preventDefault()}
+            >
               {stats.map(({ target, successRate, average, p90, lastResult, health }, index) => (
-                <tr key={target.id}>
+                <tr
+                  key={target.id}
+                  className={draggedIndex === index ? "dragging" : ""}
+                  draggable
+                  onDragStart={(e) => handleRowDragStart(e, index)}
+                  onDragEnd={handleRowDragEnd}
+                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
+                  onDrop={(e) => handleRowDrop(e, index)}
+                >
+                  <td className="drag-handle" title="Drag to reorder">☰</td>
                   <td>{target.name}</td>
                   <td className="mono">
                     {target.host}:{target.port}
@@ -371,42 +424,17 @@ export default function App() {
                       Delete
                     </button>
                   </td>
-                  <td className="order-cell">
-                    <button
-                      className="move-btn double"
-                      onClick={() => handleMove(index, "top")}
-                      disabled={index === 0}
-                      title="Move to top"
-                    >
-                      ▲▲
-                    </button>
-                    <button
-                      className="move-btn"
-                      onClick={() => handleMove(index, "up")}
-                      disabled={index === 0}
-                      title="Move up"
-                    >
-                      ▲
-                    </button>
-                    <button
-                      className="move-btn"
-                      onClick={() => handleMove(index, "down")}
-                      disabled={index === stats.length - 1}
-                      title="Move down"
-                    >
-                      ▼
-                    </button>
-                    <button
-                      className="move-btn double"
-                      onClick={() => handleMove(index, "bottom")}
-                      disabled={index === stats.length - 1}
-                      title="Move to bottom"
-                    >
-                      ▼▼
-                    </button>
-                  </td>
                 </tr>
               ))}
+              {draggedIndex !== null && (
+                <tr
+                  className="drop-end-zone"
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={handleDropToEnd}
+                >
+                  <td colSpan={9}>Drop here to move to end</td>
+                </tr>
+              )}
             </tbody>
           </table>
         )}
