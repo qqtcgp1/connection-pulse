@@ -48,6 +48,7 @@ export default function App() {
   const [storagePath, setStoragePath] = useState<string>("");
   const [showInfo, setShowInfo] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load targets and storage info on mount
@@ -192,6 +193,7 @@ export default function App() {
 
   const handleRowDragStart = (e: React.DragEvent<HTMLTableRowElement>, index: number) => {
     setDraggedIndex(index);
+    setHighlightedId(targets[index].id);
     e.dataTransfer.effectAllowed = "move";
     e.dataTransfer.setData("text/plain", String(index));
     // Make the drag image semi-transparent
@@ -386,7 +388,7 @@ export default function App() {
               {stats.map(({ target, successRate, average, p90, lastResult, health }, index) => (
                 <tr
                   key={target.id}
-                  className={draggedIndex === index ? "dragging" : ""}
+                  className={`${draggedIndex === index ? "dragging" : ""} ${highlightedId === target.id ? "highlighted" : ""}`}
                   draggable
                   onDragStart={(e) => handleRowDragStart(e, index)}
                   onDragEnd={handleRowDragEnd}

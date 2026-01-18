@@ -100,6 +100,14 @@ tr.dragging {
   opacity: 0.5;
 }
 
+tr.highlighted {
+  background: #1e293b;
+}
+
+tr.highlighted td {
+  border-bottom-color: #334155;
+}
+
 tr.drop-end-zone {
   background: #1a1a1a;
 }
