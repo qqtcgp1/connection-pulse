@@ -1,0 +1,26 @@
+[
+  {
+    "id": "google-dns",
+    "name": "Google DNS",
+    "host": "8.8.8.8",
+    "port": 53
+  },
+  {
+    "id": "cloudflare-dns",
+    "name": "Cloudflare DNS",
+    "host": "1.1.1.1",
+    "port": 53
+  },
+  {
+    "id": "example-https",
+    "name": "Example.com HTTPS",
+    "host": "example.com",
+    "port": 443
+  },
+  {
+    "id": "github-https",
+    "name": "GitHub HTTPS",
+    "host": "github.com",
+    "port": 443
+  }
+]

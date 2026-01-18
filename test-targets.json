@@ -1,0 +1,80 @@
+[
+  {
+    "id": "cloudflare-dns",
+    "name": "Cloudflare DNS",
+    "host": "1.1.1.1",
+    "port": 53
+  },
+  {
+    "id": "google-dns",
+    "name": "Google DNS",
+    "host": "8.8.8.8",
+    "port": 53
+  },
+  {
+    "id": "cloudflare-https",
+    "name": "Cloudflare HTTPS",
+    "host": "1.1.1.1",
+    "port": 443
+  },
+  {
+    "id": "sg-aws",
+    "name": "AWS Singapore",
+    "host": "ec2.ap-southeast-1.amazonaws.com",
+    "port": 443
+  },
+  {
+    "id": "sg-google",
+    "name": "Google Singapore",
+    "host": "singapore.google.com",
+    "port": 443
+  },
+  {
+    "id": "hk-cloudflare",
+    "name": "Cloudflare HK",
+    "host": "asia.cloudflare.com",
+    "port": 443
+  },
+  {
+    "id": "jp-google",
+    "name": "Google Japan",
+    "host": "google.co.jp",
+    "port": 443
+  },
+  {
+    "id": "us-google",
+    "name": "Google US",
+    "host": "google.com",
+    "port": 443
+  },
+  {
+    "id": "eu-aws",
+    "name": "AWS Frankfurt",
+    "host": "ec2.eu-central-1.amazonaws.com",
+    "port": 443
+  },
+  {
+    "id": "us-east-aws",
+    "name": "AWS US East",
+    "host": "ec2.us-east-1.amazonaws.com",
+    "port": 443
+  },
+  {
+    "id": "github",
+    "name": "GitHub",
+    "host": "github.com",
+    "port": 443
+  },
+  {
+    "id": "unreachable-port",
+    "name": "Blocked Port (test)",
+    "host": "1.1.1.1",
+    "port": 12345
+  },
+  {
+    "id": "nonexistent",
+    "name": "Nonexistent Host",
+    "host": "this.host.does.not.exist.invalid",
+    "port": 443
+  }
+]

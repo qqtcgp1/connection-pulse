@@ -1,0 +1,127 @@
+# Network Tester - AI Agent Instructions
+
+## Project Overview
+A Tauri desktop app that performs TCP connectivity tests (tcping) from the client machine to multiple IP:port targets. Built for trading software network monitoring where reliability and latency matter.
+
+## Tech Stack
+- **Backend**: Rust + Tauri v2
+- **Frontend**: React + TypeScript + Vite
+- **UI**: Single-page app with dark theme
+
+## Architecture
+Single native process with embedded WebView (not separate backend/frontend processes):
+- Rust handles: TCP probes, file I/O, background loop
+- React handles: UI rendering, stats calculation, user interactions
+- Communication: `invoke()` for UI→Rust, `emit()` events for Rust→UI
+
+## Key Files
+
+### Rust Backend (`src-tauri/`)
+- `src/lib.rs` - Main app logic:
+  - `tcp_probe()` - TCP connect test with timeout
+  - `start_probe_loop()` - Background task probing all targets every 5 seconds
+  - Tauri commands: `get_targets`, `set_targets`, `probe_target`
+  - Emits `probe:update` events to frontend
+
+### React Frontend (`src/`)
+- `App.tsx` - Main component:
+  - Target list with health badges
+  - Add/Edit/Delete/Refresh buttons
+  - Drag-drop JSON import
+  - Stats calculation (average, p90, success rate)
+  - `computeHealth()` - Determines health category
+- `storage.ts` - Load/save targets to AppData as JSON
+- `types.ts` - TypeScript interfaces
+- `App.css` - Dark theme styles
+
+### Config
+- `src-tauri/tauri.conf.json` - Window size, app metadata
+- `src-tauri/capabilities/default.json` - Plugin permissions (fs, dialog)
+
+## Health Categories (Trading-Grade Thresholds)
+
+| Badge | Success Rate | Average | p90 |
+|-------|-------------|---------|-----|
+| OPTIMAL | ≥99.5% | ≤15ms | ≤30ms |
+| GREAT | ≥99% | ≤30ms | ≤80ms |
+| GOOD | ≥98% | ≤80ms | ≤200ms |
+| WARN | ≥95% | — | — |
+| BAD | ≥70% | — | — |
+| DOWN | <70% | — | — |
+
+Stats are calculated over a 5-minute rolling window.
+
+## Commands
+
+```bash
+# Development
+npm install
+npm run tauri dev
+
+# Build release
+npm run tauri build
+
+# Clean rebuild (if icon or config changes don't apply)
+cd src-tauri && cargo clean && cd .. && npm run tauri dev
+```
+
+## Data Storage
+
+### Storage Modes
+1. **Portable Mode**: If `targets.json` exists next to the exe, uses that file
+2. **AppData Mode**: Default - saves to `%APPDATA%/com.network-tester.app/targets.json`
+
+Detection logic in `storage.ts`:
+- On startup, checks for `targets.json` in exe directory (resourceDir)
+- If found → portable mode
+- If not found → AppData mode
+
+### Format
+`[{ "id": "uuid", "name": "...", "host": "...", "port": 443 }, ...]`
+
+### Behavior
+- **Auto-save**: Changes saved immediately on add/edit/delete/import
+- **Stats not persisted**: Health stats reset each session (calculated from live probes)
+
+## Import/Export
+- Drag-drop `.json` file onto window to import
+- Click "Import JSON" for file picker
+- Click "Export JSON" to download current targets
+
+## Key Behaviors
+1. **Probe loop starts immediately** on app launch
+2. **Concurrent probes** - all targets probed in parallel each cycle
+3. **Socket closed immediately** after each probe (proper cleanup)
+4. **Refresh button** - clears stats for a target (useful when server comes back online)
+5. **Auto-clear on edit** - changing host/port clears that target's stats
+
+## Common Modifications
+
+### Change probe interval
+In `src-tauri/src/lib.rs`, find:
+```rust
+let mut ticker = interval(Duration::from_secs(5));
+```
+
+### Change health thresholds
+In `src/App.tsx`, find `computeHealth()` function.
+
+### Change rolling window duration
+In `src/App.tsx`, find:
+```typescript
+const WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+```
+
+### Add new table columns
+1. Update `TargetStats` interface in `types.ts`
+2. Calculate new stat in `App.tsx` stats mapping
+3. Add `<th>` and `<td>` in the table JSX
+
+## Tauri Plugins Used
+- `tauri-plugin-fs` - Read/write targets JSON
+- `tauri-plugin-dialog` - File picker for import
+
+## Icon
+Source: `app-icon-new.png` (network pulse style)
+Generated icons in: `src-tauri/icons/`
+To regenerate: `npx tauri icon app-icon-new.png`
