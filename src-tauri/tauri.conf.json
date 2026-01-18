@@ -24,5 +24,13 @@
       "csp": null
     }
   },
+  "bundle": {
+    "targets": "all",
+    "linux": {
+      "appimage": {
+        "bundleMediaFramework": false
+      }
+    }
+  },
   "plugins": {}
 }

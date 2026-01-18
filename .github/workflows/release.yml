@@ -5,62 +5,53 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     strategy:
       fail-fast: false
       matrix:
         include:
-          - platform: windows-latest
-            args: ''
-          - platform: macos-latest
-            args: --target universal-apple-darwin
-          - platform: ubuntu-22.04
-            args: ''
+          - os: windows-latest
+            target: ''
+            artifact: src-tauri/target/release/connection-pulse.exe
+            name: ConnectionPulse-windows-x64.exe
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            artifact: src-tauri/target/x86_64-apple-darwin/release/connection-pulse
+            name: ConnectionPulse-macos-intel
+          - os: macos-latest
+            target: aarch64-apple-darwin
+            artifact: src-tauri/target/aarch64-apple-darwin/release/connection-pulse
+            name: ConnectionPulse-macos-apple-silicon
+          - os: ubuntu-22.04
+            target: ''
+            artifact: src-tauri/target/release/connection-pulse
+            name: ConnectionPulse-linux-x64
 
-    runs-on: ${{ matrix.platform }}
+    runs-on: ${{ matrix.os }}
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
           cache: 'npm'
-
-      - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+          targets: ${{ matrix.target }}
 
-      - name: Install Linux dependencies
-        if: matrix.platform == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - name: Install Linux deps
+        if: matrix.os == 'ubuntu-22.04'
+        run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev
 
-      - name: Install frontend dependencies
-        run: npm ci
+      - run: npm ci
+      - name: Build
+        run: npm run tauri build -- --no-bundle ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
 
-      - name: Build Tauri app
-        uses: tauri-apps/tauri-action@v0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload
+        uses: softprops/action-gh-release@v1
         with:
-          tagName: ${{ github.ref_name }}
-          releaseName: 'Connection Pulse ${{ github.ref_name }}'
-          releaseBody: |
-            ## Downloads
-
-            | Platform | File | Status |
-            |----------|------|--------|
-            | Windows | `.msi` or `-setup.exe` | Stable |
-            | macOS (Universal) | `.dmg` | Experimental |
-            | Linux | `.AppImage` or `.deb` | Experimental |
-
-            > **Note:** macOS and Linux builds are experimental and untested. Feedback and bug reports welcome!
-          releaseDraft: false
-          prerelease: false
-          args: ${{ matrix.args }}
+          files: ${{ matrix.artifact }}
