@@ -302,7 +302,7 @@ export default function App() {
       onDrop={handleFileDrop}
     >
       <header>
-        <h1>Network Tester</h1>
+        <h1>Connection Pulse</h1>
         <div className="actions">
           <button onClick={handleAddTarget}>Add Target</button>
           <button onClick={handleRefreshAll} disabled={targets.length === 0}>
