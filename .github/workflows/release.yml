@@ -12,13 +12,11 @@ jobs:
       matrix:
         include:
           - platform: windows-latest
-            target: x86_64-pc-windows-msvc
+            args: ''
           - platform: macos-latest
-            target: x86_64-apple-darwin
-          - platform: macos-latest
-            target: aarch64-apple-darwin
+            args: --target universal-apple-darwin
           - platform: ubuntu-22.04
-            target: x86_64-unknown-linux-gnu
+            args: ''
 
     runs-on: ${{ matrix.platform }}
 
@@ -35,7 +33,7 @@ jobs:
       - name: Install Rust
         uses: dtolnay/rust-toolchain@stable
         with:
-          targets: ${{ matrix.target }}
+          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
 
       - name: Install Linux dependencies
         if: matrix.platform == 'ubuntu-22.04'
@@ -58,12 +56,11 @@ jobs:
 
             | Platform | File | Status |
             |----------|------|--------|
-            | Windows | `connection-pulse_*_x64-setup.exe` | Stable |
-            | macOS (Intel) | `Connection.Pulse_*_x64.dmg` | Experimental |
-            | macOS (Apple Silicon) | `Connection.Pulse_*_aarch64.dmg` | Experimental |
-            | Linux | `connection-pulse_*_amd64.AppImage` | Experimental |
+            | Windows | `.msi` or `-setup.exe` | Stable |
+            | macOS (Universal) | `.dmg` | Experimental |
+            | Linux | `.AppImage` or `.deb` | Experimental |
 
             > **Note:** macOS and Linux builds are experimental and untested. Feedback and bug reports welcome!
           releaseDraft: false
           prerelease: false
-          args: --target ${{ matrix.target }}
+          args: ${{ matrix.args }}
