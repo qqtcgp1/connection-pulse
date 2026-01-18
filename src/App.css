@@ -105,6 +105,11 @@ button.small {
   cursor: not-allowed;
 }
 
+.move-btn.double {
+  letter-spacing: -3px;
+  padding-right: 8px;
+}
+
 .actions-cell {
   white-space: nowrap;
 }
@@ -163,14 +168,6 @@ th {
 
 td {
   font-size: 14px;
-}
-
-tr.highlighted {
-  background: #1e3a5f;
-}
-
-tr.highlighted td {
-  border-bottom-color: #2a4a6f;
 }
 
 td.mono {

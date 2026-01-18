@@ -47,7 +47,6 @@ export default function App() {
   const [storageMode, setStorageMode] = useState<StorageMode>("appdata");
   const [storagePath, setStoragePath] = useState<string>("");
   const [showInfo, setShowInfo] = useState(false);
-  const [highlightedId, setHighlightedId] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Load targets and storage info on mount
@@ -197,12 +196,10 @@ export default function App() {
       return;
     }
 
-    const movedId = targets[index].id;
     const newTargets = [...targets];
     const [removed] = newTargets.splice(index, 1);
     newTargets.splice(newIndex, 0, removed);
     setTargets(newTargets);
-    setHighlightedId(movedId);
     // Save in background
     saveTargets(newTargets);
     invoke("set_targets", { targets: newTargets });
@@ -330,7 +327,6 @@ export default function App() {
           <table>
             <thead>
               <tr>
-                <th className="order-col">Order</th>
                 <th>Name</th>
                 <th>Host:Port</th>
                 <th>Health</th>
@@ -339,48 +335,12 @@ export default function App() {
                 <th>p90</th>
                 <th>Success (5m)</th>
                 <th>Actions</th>
+                <th className="order-col">Order</th>
               </tr>
             </thead>
             <tbody>
               {stats.map(({ target, successRate, average, p90, lastResult, health }, index) => (
-                <tr
-                  key={target.id}
-                  className={highlightedId === target.id ? "highlighted" : ""}
-                >
-                  <td className="order-cell">
-                    <button
-                      className="move-btn"
-                      onClick={() => handleMove(index, "top")}
-                      disabled={index === 0}
-                      title="Move to top"
-                    >
-                      ⏶
-                    </button>
-                    <button
-                      className="move-btn"
-                      onClick={() => handleMove(index, "up")}
-                      disabled={index === 0}
-                      title="Move up"
-                    >
-                      ▲
-                    </button>
-                    <button
-                      className="move-btn"
-                      onClick={() => handleMove(index, "down")}
-                      disabled={index === stats.length - 1}
-                      title="Move down"
-                    >
-                      ▼
-                    </button>
-                    <button
-                      className="move-btn"
-                      onClick={() => handleMove(index, "bottom")}
-                      disabled={index === stats.length - 1}
-                      title="Move to bottom"
-                    >
-                      ⏷
-                    </button>
-                  </td>
+                <tr key={target.id}>
                   <td>{target.name}</td>
                   <td className="mono">
                     {target.host}:{target.port}
@@ -409,6 +369,40 @@ export default function App() {
                     </button>
                     <button className="small danger" onClick={() => handleDeleteTarget(target.id)}>
                       Delete
+                    </button>
+                  </td>
+                  <td className="order-cell">
+                    <button
+                      className="move-btn double"
+                      onClick={() => handleMove(index, "top")}
+                      disabled={index === 0}
+                      title="Move to top"
+                    >
+                      ▲▲
+                    </button>
+                    <button
+                      className="move-btn"
+                      onClick={() => handleMove(index, "up")}
+                      disabled={index === 0}
+                      title="Move up"
+                    >
+                      ▲
+                    </button>
+                    <button
+                      className="move-btn"
+                      onClick={() => handleMove(index, "down")}
+                      disabled={index === stats.length - 1}
+                      title="Move down"
+                    >
+                      ▼
+                    </button>
+                    <button
+                      className="move-btn double"
+                      onClick={() => handleMove(index, "bottom")}
+                      disabled={index === stats.length - 1}
+                      title="Move to bottom"
+                    >
+                      ▼▼
                     </button>
                   </td>
                 </tr>
