@@ -1,5 +1,9 @@
 # Connection Pulse
 
+> Personal, experimental project.
+> Shared as-is, without guarantees.
+> Not intended for production use or supported deployment.
+
 A lightweight cross-platform desktop application for monitoring TCP connectivity to multiple servers. Built with Tauri, React, and Rust.
 
 **Platforms:** Windows, macOS, Linux
