@@ -494,6 +494,18 @@ export default function App() {
             <li><strong>Import:</strong> Drag .json file onto window or click Import JSON</li>
             <li><strong>Export:</strong> Download current targets as JSON file</li>
           </ul>
+
+          <h3>About</h3>
+          <p style={{ color: "#888", fontSize: "12px", lineHeight: "1.5" }}>
+            Personal, experimental project. Shared as-is, without guarantees.
+            Not intended for production use or supported deployment.
+            <br /><br />
+            Licensed under the MIT License.
+            <br />
+            <a href="https://github.com/qqtcgp1/connection-pulse" target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa" }}>
+              github.com/qqtcgp1/connection-pulse
+            </a>
+          </p>
         </div>
       )}
 
