@@ -17,7 +17,7 @@ jobs:
           - os: windows-latest
             target: ''
             artifact: src-tauri/target/release/connection-pulse.exe
-            name: ConnectionPulse-windows-x64.exe
+            name: connection-pulse.exe
           - os: macos-latest
             target: x86_64-apple-darwin
             artifact: src-tauri/target/x86_64-apple-darwin/release/connection-pulse
@@ -51,7 +51,24 @@ jobs:
       - name: Build
         run: npm run tauri build -- --no-bundle ${{ matrix.target && format('--target {0}', matrix.target) || '' }}
 
+      - name: Rename artifact
+        run: mv "${{ matrix.artifact }}" "${{ matrix.name }}"
+        shell: bash
+
       - name: Upload
         uses: softprops/action-gh-release@v1
         with:
-          files: ${{ matrix.artifact }}
+          body: |
+            ## Downloads
+
+            | Platform | File | Status |
+            |----------|------|--------|
+            | Windows | `connection-pulse.exe` | Stable |
+            | macOS Intel | `ConnectionPulse-macos-intel` | Experimental |
+            | macOS Apple Silicon | `ConnectionPulse-macos-apple-silicon` | Experimental |
+            | Linux | `ConnectionPulse-linux-x64` | Experimental |
+
+            **Windows:** Download and run - no installation required.
+
+            **macOS/Linux:** Experimental builds - untested. Feedback welcome!
+          files: ${{ matrix.name }}
