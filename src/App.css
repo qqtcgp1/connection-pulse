@@ -427,3 +427,320 @@ footer {
   word-break: break-all;
   margin: 8px 0;
 }
+
+/* Button icons - hidden on desktop by default */
+.btn-icon {
+  display: none;
+}
+
+/* ===========================================
+   MOBILE STYLES - Only affects small screens
+   =========================================== */
+@media (max-width: 768px) {
+  .app {
+    padding: 12px;
+  }
+
+  /* Hide import/export on mobile */
+  .desktop-only {
+    display: none !important;
+  }
+
+  /* Header: stack vertically */
+  header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+  }
+
+  header h1 {
+    font-size: 18px;
+    text-align: center;
+  }
+
+  .actions {
+    display: flex;
+    flex-direction: row;
+    gap: 8px;
+  }
+
+  .actions button {
+    padding: 12px 8px;
+    font-size: 13px;
+  }
+
+  /* Table to Cards transformation */
+  main {
+    overflow-x: visible;
+  }
+
+  table {
+    display: block;
+    min-width: 0;
+  }
+
+  thead {
+    display: none;
+  }
+
+  tbody {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  tr {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "name health"
+      "host host"
+      "last avg"
+      "p90 success"
+      "actions actions";
+    gap: 4px 12px;
+    background: #1a1a1a;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    padding: 14px;
+  }
+
+  tr.dragging {
+    opacity: 0.5;
+  }
+
+  tr.highlighted {
+    border-color: #334155;
+  }
+
+  tr.drop-end-zone {
+    padding: 16px;
+    text-align: center;
+  }
+
+  tr.drop-end-zone td {
+    border: none;
+    padding: 0;
+  }
+
+  td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: none;
+    font-size: 14px;
+  }
+
+  td::before {
+    content: attr(data-label);
+    font-size: 11px;
+    color: #666;
+    text-transform: uppercase;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+  }
+
+  /* Hide drag handle column on mobile */
+  .drag-col,
+  .drag-handle {
+    display: none;
+  }
+
+  /* Card header row: Name + Health */
+  td[data-label="Name"] {
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    padding-bottom: 4px;
+  }
+
+  td[data-label="Name"]::before {
+    display: none;
+  }
+
+  td[data-label="Health"] {
+    justify-content: flex-end;
+    padding-bottom: 4px;
+  }
+
+  td[data-label="Health"]::before {
+    display: none;
+  }
+
+  /* Host:Port styling */
+  td.mono {
+    font-size: 13px;
+    color: #aaa;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #2a2a2a;
+    margin-bottom: 4px;
+  }
+
+  /* Assign grid areas to cells */
+  td[data-label="Name"] { grid-area: name; }
+  td[data-label="Host:Port"] { grid-area: host; }
+  td[data-label="Health"] { grid-area: health; }
+  td[data-label="Last"] { grid-area: last; }
+  td[data-label="Avg"] { grid-area: avg; }
+  td[data-label="p90"] { grid-area: p90; }
+  td[data-label="Success"] { grid-area: success; }
+  .actions-cell { grid-area: actions; }
+
+  /* Stats cells - 2x2 grid, label:value inline */
+  td[data-label="Last"],
+  td[data-label="Avg"],
+  td[data-label="p90"],
+  td[data-label="Success"] {
+    padding: 4px 0;
+    font-family: "SF Mono", Monaco, Consolas, monospace;
+    font-size: 13px;
+    color: #e0e0e0;
+    justify-content: flex-start;
+    gap: 8px;
+  }
+
+  td[data-label="Last"]::before,
+  td[data-label="Avg"]::before,
+  td[data-label="p90"]::before,
+  td[data-label="Success"]::before {
+    font-size: 10px;
+    min-width: 50px;
+  }
+
+  /* Actions row at bottom of card */
+  .actions-cell {
+    display: flex;
+    justify-content: flex-end;
+    gap: 8px;
+    padding-top: 12px;
+    margin-top: 8px;
+    border-top: 1px solid #2a2a2a;
+  }
+
+  .actions-cell::before {
+    display: none;
+  }
+
+  /* Icon buttons on mobile */
+  .btn-text {
+    display: none;
+  }
+
+  .btn-icon {
+    display: inline;
+    font-size: 16px;
+  }
+
+  .actions-cell button {
+    width: 40px;
+    height: 40px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+  }
+
+  .actions-cell button.danger .btn-icon {
+    color: #f87171;
+  }
+
+  /* Modal: full width, top positioned */
+  .modal-overlay {
+    align-items: flex-start;
+    padding: 16px;
+    padding-top: 40px;
+    overflow-y: auto;
+  }
+
+  .modal {
+    width: 100%;
+    max-width: 100%;
+    border-radius: 12px;
+    padding: 20px;
+  }
+
+  .modal h2 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+
+  .form-group {
+    margin-bottom: 14px;
+  }
+
+  .form-group label {
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+
+  .form-group input {
+    padding: 14px 12px;
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    border-radius: 8px;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+    margin-top: 20px;
+  }
+
+  .modal-actions button {
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+    border-radius: 8px;
+  }
+
+  /* Footer: stack vertically */
+  footer {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+    margin-top: 16px;
+    padding-top: 12px;
+  }
+
+  .footer-left {
+    align-items: center;
+  }
+
+  .info-btn {
+    padding: 8px 16px;
+  }
+
+  /* Info panel adjustments */
+  .info-panel {
+    font-size: 12px;
+    padding: 16px;
+    margin-top: 12px;
+  }
+
+  .info-panel h3 {
+    font-size: 13px;
+  }
+
+  .info-panel ul {
+    padding-left: 16px;
+  }
+
+  /* Empty state */
+  .empty {
+    padding: 40px 20px;
+  }
+
+  .empty p {
+    font-size: 14px;
+  }
+
+  /* Drop overlay */
+  .drop-overlay {
+    inset: 12px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+}

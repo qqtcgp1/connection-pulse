@@ -130,7 +130,7 @@ export default function App() {
   }, []);
 
   const handleAddTarget = () => {
-    setEditingTarget({ id: generateId(), name: "", host: "", port: 11000 });
+    setEditingTarget({ id: generateId(), name: "", host: "", port: 443 });
     setIsAdding(true);
   };
 
@@ -308,8 +308,8 @@ export default function App() {
           <button onClick={handleRefreshAll} disabled={targets.length === 0}>
             Refresh All
           </button>
-          <button onClick={handleImportFile}>Import JSON</button>
-          <button onClick={handleExportFile} disabled={targets.length === 0}>
+          <button className="desktop-only" onClick={handleImportFile}>Import JSON</button>
+          <button className="desktop-only" onClick={handleExportFile} disabled={targets.length === 0}>
             Export JSON
           </button>
         </div>
@@ -325,6 +325,8 @@ export default function App() {
               <label>Name</label>
               <input
                 type="text"
+                inputMode="text"
+                autoComplete="off"
                 value={editingTarget.name}
                 onChange={(e) => setEditingTarget({ ...editingTarget, name: e.target.value })}
                 placeholder="e.g., Google DNS"
@@ -334,6 +336,8 @@ export default function App() {
               <label>Host</label>
               <input
                 type="text"
+                inputMode="url"
+                autoComplete="off"
                 value={editingTarget.host}
                 onChange={(e) => setEditingTarget({ ...editingTarget, host: e.target.value })}
                 placeholder="e.g., 8.8.8.8 or example.com"
@@ -343,6 +347,8 @@ export default function App() {
               <label>Port</label>
               <input
                 type="number"
+                inputMode="numeric"
+                autoComplete="off"
                 value={editingTarget.port}
                 onChange={(e) =>
                   setEditingTarget({ ...editingTarget, port: parseInt(e.target.value) || 0 })
@@ -396,34 +402,37 @@ export default function App() {
                   onDrop={(e) => handleRowDrop(e, index)}
                 >
                   <td className="drag-handle" title="Drag to reorder">☰</td>
-                  <td>{target.name}</td>
-                  <td className="mono">
+                  <td data-label="Name">{target.name}</td>
+                  <td className="mono" data-label="Host:Port">
                     {target.host}:{target.port}
                   </td>
-                  <td>
+                  <td data-label="Health">
                     <span className={`pill ${health}`}>
                       {health.toUpperCase()}
                     </span>
                   </td>
-                  <td>
+                  <td data-label="Last">
                     {lastResult
                       ? lastResult.ok
                         ? fmtMs(lastResult.latency_ms)
                         : `FAIL`
                       : "—"}
                   </td>
-                  <td>{fmtMs(average)}</td>
-                  <td>{fmtMs(p90)}</td>
-                  <td>{fmtPct(successRate)}</td>
+                  <td data-label="Avg">{fmtMs(average)}</td>
+                  <td data-label="p90">{fmtMs(p90)}</td>
+                  <td data-label="Success">{fmtPct(successRate)}</td>
                   <td className="actions-cell">
-                    <button className="small" onClick={() => handleRefresh(target.id)}>
-                      Refresh
+                    <button className="small" onClick={() => handleRefresh(target.id)} title="Refresh">
+                      <span className="btn-icon">↻</span>
+                      <span className="btn-text">Refresh</span>
                     </button>
-                    <button className="small" onClick={() => handleEditTarget(target)}>
-                      Edit
+                    <button className="small" onClick={() => handleEditTarget(target)} title="Edit">
+                      <span className="btn-icon">✎</span>
+                      <span className="btn-text">Edit</span>
                     </button>
-                    <button className="small danger" onClick={() => handleDeleteTarget(target.id)}>
-                      Delete
+                    <button className="small danger" onClick={() => handleDeleteTarget(target.id)} title="Delete">
+                      <span className="btn-icon">✕</span>
+                      <span className="btn-text">Delete</span>
                     </button>
                   </td>
                 </tr>
@@ -503,7 +512,7 @@ export default function App() {
             Licensed under the MIT License.
             <br />
             <a href="https://github.com/qqtcgp1/connection-pulse" target="_blank" rel="noopener noreferrer" style={{ color: "#60a5fa" }}>
-              github.com/qqtcgp1/connection-pulse
+              https://github.com/qqtcgp1/connection-pulse
             </a>
           </p>
         </div>
