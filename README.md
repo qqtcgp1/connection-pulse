@@ -25,11 +25,24 @@ Built with [Tauri](https://tauri.app/), the app uses each platform's native webv
 |----------|---------|-------|
 | Windows | WebView2 | Included in Windows 10/11; older systems auto-prompted to install |
 | macOS | WebKit | Built into macOS |
-| Linux | WebKitGTK | May require `libwebkit2gtk-4.0` on some distros |
+| Linux | WebKitGTK | Requires WebKitGTK 4.1 (see [Linux Installation](#linux-installation)) |
 | Android | Android WebView | Requires Android Studio + NDK to build |
 | iOS | WKWebView | Requires Xcode + macOS to build |
 
 **Mobile:** The app can be built for Android/iOS with `npm run tauri android build` or `npm run tauri ios build`. The UI includes a responsive mobile layout with card-based design, compact stats grid, and touch-friendly icon buttons.
+
+### Linux Installation
+
+Linux requires WebKitGTK 4.1 and GTK3. Install the dependencies for your distribution:
+
+| Distribution | Command |
+|--------------|---------|
+| Ubuntu/Debian 22.04+ | `sudo apt install libwebkit2gtk-4.1-0 libgtk-3-0` |
+| Fedora 37+ | `sudo dnf install webkit2gtk4.1 gtk3` |
+| Arch/Manjaro | `sudo pacman -S webkit2gtk-4.1 gtk3` |
+| openSUSE | `sudo zypper install libwebkit2gtk-4_1-0 gtk3` |
+
+**Note:** WebKitGTK 4.1 is required (not 4.0). Distros older than ~2022 may not have this version available.
 
 ## Health Categories
 

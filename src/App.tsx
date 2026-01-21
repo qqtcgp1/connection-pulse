@@ -5,6 +5,7 @@ import { open, save } from "@tauri-apps/plugin-dialog";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import type { Target, ProbeResult, TargetStats } from "./types";
 import { loadTargets, saveTargets, parseTargetsJson, getStorageInfo, StorageMode } from "./storage";
+import { platform } from "@tauri-apps/plugin-os";
 
 const WINDOW_MS = 5 * 60 * 1000; // 5 minute rolling window
 
@@ -46,6 +47,7 @@ export default function App() {
   const [dragOver, setDragOver] = useState(false);
   const [storageMode, setStorageMode] = useState<StorageMode>("appdata");
   const [storagePath, setStoragePath] = useState<string>("");
+  const [isMobile, setIsMobile] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
   const [highlightedId, setHighlightedId] = useState<string | null>(null);
@@ -54,6 +56,8 @@ export default function App() {
   // Load targets and storage info on mount
   useEffect(() => {
     (async () => {
+      const os = await platform();
+      setIsMobile(os === "android" || os === "ios");
       const info = await getStorageInfo();
       setStorageMode(info.mode);
       setStoragePath(info.path);
@@ -84,8 +88,9 @@ export default function App() {
     };
   }, []);
 
-  // HTML5 file drop handlers
+  // HTML5 file drop handlers (desktop only)
   const handleFileDragOver = (e: React.DragEvent) => {
+    if (isMobile) return;
     e.preventDefault();
     // Only show overlay for external file drops, not internal row drags
     if (e.dataTransfer.types.includes("Files")) {
@@ -94,6 +99,7 @@ export default function App() {
   };
 
   const handleFileDragLeave = (e: React.DragEvent) => {
+    if (isMobile) return;
     e.preventDefault();
     // Only hide if leaving the app container
     if (e.currentTarget === e.target) {
@@ -102,6 +108,7 @@ export default function App() {
   };
 
   const handleFileDrop = async (e: React.DragEvent) => {
+    if (isMobile) return;
     e.preventDefault();
     setDragOver(false);
 
@@ -237,6 +244,26 @@ export default function App() {
     // Save in background
     saveTargets(newTargets);
     invoke("set_targets", { targets: newTargets });
+  };
+
+  const handleMoveUp = async (index: number) => {
+    if (index === 0) return;
+    const targetId = targets[index].id;
+    const newTargets = [...targets];
+    [newTargets[index - 1], newTargets[index]] = [newTargets[index], newTargets[index - 1]];
+    setHighlightedId(targetId);
+    await handleSaveTargets(newTargets);
+    setTimeout(() => setHighlightedId(null), 1000);
+  };
+
+  const handleMoveDown = async (index: number) => {
+    if (index === targets.length - 1) return;
+    const targetId = targets[index].id;
+    const newTargets = [...targets];
+    [newTargets[index], newTargets[index + 1]] = [newTargets[index + 1], newTargets[index]];
+    setHighlightedId(targetId);
+    await handleSaveTargets(newTargets);
+    setTimeout(() => setHighlightedId(null), 1000);
   };
 
   const handleCancelEdit = () => {
@@ -388,18 +415,18 @@ export default function App() {
               </tr>
             </thead>
             <tbody
-              onDragOver={(e) => e.preventDefault()}
-              onDragEnter={(e) => e.preventDefault()}
+              onDragOver={!isMobile ? (e) => e.preventDefault() : undefined}
+              onDragEnter={!isMobile ? (e) => e.preventDefault() : undefined}
             >
               {stats.map(({ target, successRate, average, p90, lastResult, health }, index) => (
                 <tr
                   key={target.id}
                   className={`${draggedIndex === index ? "dragging" : ""} ${highlightedId === target.id ? "highlighted" : ""}`}
-                  draggable
-                  onDragStart={(e) => handleRowDragStart(e, index)}
-                  onDragEnd={handleRowDragEnd}
-                  onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); }}
-                  onDrop={(e) => handleRowDrop(e, index)}
+                  draggable={!isMobile}
+                  onDragStart={!isMobile ? (e) => handleRowDragStart(e, index) : undefined}
+                  onDragEnd={!isMobile ? handleRowDragEnd : undefined}
+                  onDragOver={!isMobile ? (e) => { e.preventDefault(); e.stopPropagation(); } : undefined}
+                  onDrop={!isMobile ? (e) => handleRowDrop(e, index) : undefined}
                 >
                   <td className="drag-handle" title="Drag to reorder">☰</td>
                   <td data-label="Name">{target.name}</td>
@@ -422,6 +449,12 @@ export default function App() {
                   <td data-label="p90">{fmtMs(p90)}</td>
                   <td data-label="Success">{fmtPct(successRate)}</td>
                   <td className="actions-cell">
+                    <button className="small mobile-only" onClick={() => handleMoveUp(index)} disabled={index === 0} title="Move up">
+                      <span className="btn-icon">▲</span>
+                    </button>
+                    <button className="small mobile-only" onClick={() => handleMoveDown(index)} disabled={index === targets.length - 1} title="Move down">
+                      <span className="btn-icon">▼</span>
+                    </button>
                     <button className="small" onClick={() => handleRefresh(target.id)} title="Refresh">
                       <span className="btn-icon">↻</span>
                       <span className="btn-text">Refresh</span>
@@ -454,11 +487,13 @@ export default function App() {
       <footer>
         <div className="footer-left">
           <span>Probing every 5s • Window: 5min</span>
-          <span className="storage-info">
-            {storageMode === "portable"
-              ? "Storage: Portable (targets.json next to exe)"
-              : "Storage: AppData (place targets.json next to exe for portable mode)"}
-          </span>
+          {!isMobile && (
+            <span className="storage-info">
+              {storageMode === "portable"
+                ? "Storage: Portable (targets.json next to exe)"
+                : "Storage: AppData (place targets.json next to exe for portable mode)"}
+            </span>
+          )}
         </div>
         <button className="info-btn" onClick={() => setShowInfo(!showInfo)}>
           {showInfo ? "Hide Info" : "Info"}
@@ -484,24 +519,40 @@ export default function App() {
             <li><strong>DOWN:</strong> &lt;70% success</li>
           </ul>
 
-          <h3>Storage ({storageMode === "portable" ? "Portable Mode" : "System Mode"})</h3>
-          <p className="storage-path">{storagePath}</p>
+          <h3>Storage {isMobile ? "" : `(${storageMode === "portable" ? "Portable Mode" : "System Mode"})`}</h3>
+          {!isMobile && <p className="storage-path">{storagePath}</p>}
           <ul>
-            <li><strong>Portable:</strong> Place <code>targets.json</code> next to the exe to use portable mode</li>
-            <li><strong>System (default):</strong></li>
-            <ul>
-              <li>Windows: <code>%APPDATA%/com.connection-pulse.app/</code></li>
-              <li>macOS: <code>~/Library/Application Support/com.connection-pulse.app/</code></li>
-              <li>Linux: <code>~/.config/com.connection-pulse.app/</code></li>
-            </ul>
-            <li><strong>Auto-save:</strong> Changes saved immediately on add/edit/delete</li>
+            {isMobile ? (
+              <>
+                <li><strong>Location:</strong> App internal storage (managed by the system)</li>
+                <li><strong>Auto-save:</strong> Changes saved immediately on add/edit/delete</li>
+              </>
+            ) : (
+              <>
+                <li><strong>Portable:</strong> Place <code>targets.json</code> next to the exe to use portable mode</li>
+                <li><strong>System (default):</strong></li>
+                <ul>
+                  <li>Windows: <code>%APPDATA%/com.connection-pulse.app/</code></li>
+                  <li>macOS: <code>~/Library/Application Support/com.connection-pulse.app/</code></li>
+                  <li>Linux: <code>~/.config/com.connection-pulse.app/</code></li>
+                </ul>
+                <li><strong>Auto-save:</strong> Changes saved immediately on add/edit/delete</li>
+              </>
+            )}
           </ul>
 
           <h3>Actions</h3>
           <ul>
             <li><strong>Refresh:</strong> Clear stats for a target (useful when server recovers)</li>
-            <li><strong>Import:</strong> Drag .json file onto window or click Import JSON</li>
-            <li><strong>Export:</strong> Download current targets as JSON file</li>
+            {isMobile ? (
+              <li><strong>Reorder:</strong> Use ▲/▼ buttons to move targets up or down</li>
+            ) : (
+              <>
+                <li><strong>Import:</strong> Drag .json file onto window or click Import JSON</li>
+                <li><strong>Export:</strong> Download current targets as JSON file</li>
+                <li><strong>Reorder:</strong> Drag rows using the ☰ handle</li>
+              </>
+            )}
           </ul>
 
           <h3>About</h3>

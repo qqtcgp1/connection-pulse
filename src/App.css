@@ -76,6 +76,11 @@ button.small {
   font-size: 12px;
 }
 
+/* Hide mobile-only elements on desktop */
+.mobile-only {
+  display: none;
+}
+
 .drag-col {
   width: 30px;
 }
@@ -446,6 +451,11 @@ footer {
     display: none !important;
   }
 
+  /* Show mobile-only elements */
+  .mobile-only {
+    display: flex !important;
+  }
+
   /* Header: stack vertically */
   header {
     flex-direction: column;
@@ -613,11 +623,16 @@ footer {
   /* Actions row at bottom of card */
   .actions-cell {
     display: flex;
-    justify-content: flex-end;
+    justify-content: flex-start;
     gap: 8px;
     padding-top: 12px;
     margin-top: 8px;
     border-top: 1px solid #2a2a2a;
+  }
+
+  /* Move buttons on the left, push other buttons to the right */
+  .actions-cell .mobile-only:last-of-type {
+    margin-right: auto;
   }
 
   .actions-cell::before {

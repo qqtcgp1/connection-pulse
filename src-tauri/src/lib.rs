@@ -149,6 +149,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_os::init())
         .manage(state)
         .invoke_handler(tauri::generate_handler![get_targets, set_targets, probe_target])
         .setup(move |app| {
