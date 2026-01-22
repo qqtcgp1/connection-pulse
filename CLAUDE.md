@@ -7,6 +7,7 @@ A Tauri desktop app that performs TCP connectivity tests (tcping) from the clien
 - **Backend**: Rust + Tauri v2
 - **Frontend**: React + TypeScript + Vite
 - **UI**: Single-page app with dark theme
+- **Drag-and-drop**: @dnd-kit (unified solution for desktop and mobile)
 
 ## Architecture
 Single native process with embedded WebView (not separate backend/frontend processes):
@@ -72,6 +73,15 @@ npm run tauri android dev
 
 # Android - release build
 npm run tauri android build
+
+# Linux/WSL - first install dependencies
+sudo apt install libwebkit2gtk-4.1-dev build-essential curl wget file libssl-dev libayatana-appindicator3-dev librsvg2-dev
+
+# Linux/WSL - development (from /mnt/c/... path)
+npm run tauri dev
+
+# Linux/WSL - build release
+npm run tauri build
 ```
 
 ### Windows Helper Scripts
@@ -129,6 +139,7 @@ Detection logic in `storage.ts`:
 3. **Socket closed immediately** after each probe (proper cleanup)
 4. **Refresh button** - clears stats for a target (useful when server comes back online)
 5. **Auto-clear on edit** - changing host/port clears that target's stats
+6. **Drag-to-reorder** - drag rows to reorder targets (works on both desktop and mobile via @dnd-kit)
 
 ## Common Modifications
 
