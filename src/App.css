@@ -16,6 +16,11 @@ body {
   flex-direction: column;
   min-height: 100vh;
   padding: 20px;
+  /* Safe area for notches/camera cutouts */
+  padding-top: max(20px, env(safe-area-inset-top));
+  padding-left: max(20px, env(safe-area-inset-left));
+  padding-right: max(20px, env(safe-area-inset-right));
+  padding-bottom: max(20px, env(safe-area-inset-bottom));
 }
 
 .app.drag-over {
@@ -443,7 +448,12 @@ footer {
    =========================================== */
 @media (max-width: 768px) {
   .app {
+    /* Safe area for notches/camera cutouts on mobile */
     padding: 12px;
+    padding-top: max(12px, env(safe-area-inset-top));
+    padding-left: max(12px, env(safe-area-inset-left));
+    padding-right: max(12px, env(safe-area-inset-right));
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
   }
 
   /* Hide import/export on mobile */
