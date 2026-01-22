@@ -175,4 +175,4 @@ jobs:
 
             Then make executable and run: `chmod +x ConnectionPulse-linux-x64 && ./ConnectionPulse-linux-x64`
 
-            **Android:** Unsigned APK - enable "Install from unknown sources" in device settings.
+            **Android:** Download and install. You may need to enable "Install from unknown sources" in device settings.

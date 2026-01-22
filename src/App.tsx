@@ -134,6 +134,7 @@ export default function App() {
   const [storagePath, setStoragePath] = useState<string>("");
   const [isMobile, setIsMobile] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
+  const [showSplash, setShowSplash] = useState(true); // Mobile splash screen
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // dnd-kit sensors - pointer for mouse, touch for mobile
@@ -161,6 +162,10 @@ export default function App() {
       const loaded = await loadTargets();
       setTargets(loaded);
       await invoke("set_targets", { targets: loaded });
+      // If no targets, dismiss splash immediately (no probes will fire)
+      if (loaded.length === 0) {
+        setShowSplash(false);
+      }
     })();
   }, []);
 
@@ -168,6 +173,8 @@ export default function App() {
   useEffect(() => {
     const unlisten = listen<ProbeResult>("probe:update", (event) => {
       const result = event.payload;
+      // Hide splash screen on first probe result (mobile only)
+      setShowSplash(false);
       setResults((prev) => {
         const next = new Map(prev);
         const arr = next.get(result.id) || [];
@@ -366,6 +373,19 @@ export default function App() {
       onDragLeave={handleFileDragLeave}
       onDrop={handleFileDrop}
     >
+      {/* Mobile splash screen */}
+      {isMobile && showSplash && (
+        <div className="splash-screen">
+          <div className="splash-icon">
+            <div className="splash-icon-pulse"></div>
+            <div className="splash-icon-dot"></div>
+          </div>
+          <div className="splash-title">ConnectionPulse</div>
+          <div className="splash-loader"></div>
+          <div className="splash-status">Initializing probes...</div>
+        </div>
+      )}
+
       <header>
         <h1>Connection Pulse</h1>
         <div className="actions">

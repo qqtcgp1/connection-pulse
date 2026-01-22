@@ -772,3 +772,108 @@ footer {
     border-radius: 12px;
   }
 }
+
+/* Mobile splash screen - matches system theme */
+.splash-screen {
+  position: fixed;
+  inset: 0;
+  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+}
+
+@media (prefers-color-scheme: dark) {
+  .splash-screen {
+    background: linear-gradient(180deg, #0f0f0f 0%, #1a1a2e 100%);
+  }
+}
+
+.splash-icon {
+  position: relative;
+  width: 80px;
+  height: 80px;
+  margin-bottom: 24px;
+}
+
+.splash-icon-pulse {
+  position: absolute;
+  inset: 0;
+  border: 3px solid #4ade80;
+  border-radius: 50%;
+  animation: splash-icon-expand 1.5s ease-out infinite;
+}
+
+.splash-icon-pulse::before {
+  content: '';
+  position: absolute;
+  inset: 8px;
+  border: 2px solid #4ade80;
+  border-radius: 50%;
+  animation: splash-icon-expand 1.5s ease-out infinite 0.3s;
+}
+
+.splash-icon-dot {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 20px;
+  height: 20px;
+  background: #4ade80;
+  border-radius: 50%;
+  box-shadow: 0 0 20px #4ade80, 0 0 40px rgba(74, 222, 128, 0.4);
+}
+
+@keyframes splash-icon-expand {
+  0% {
+    transform: scale(0.5);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1.2);
+    opacity: 0;
+  }
+}
+
+.splash-title {
+  font-size: 28px;
+  font-weight: 600;
+  color: #1a1a1a;
+  margin-bottom: 32px;
+  letter-spacing: -0.5px;
+}
+
+@media (prefers-color-scheme: dark) {
+  .splash-title {
+    color: #ffffff;
+  }
+}
+
+.splash-loader {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #2a2a2a;
+  border-top-color: #4ade80;
+  border-right-color: #4ade80;
+  border-radius: 50%;
+  animation: splash-spin 0.8s linear infinite;
+}
+
+.splash-status {
+  margin-top: 24px;
+  font-size: 14px;
+  color: #aaa;
+  animation: splash-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes splash-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes splash-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
