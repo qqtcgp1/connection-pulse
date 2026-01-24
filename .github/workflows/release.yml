@@ -111,7 +111,7 @@ jobs:
           NDK_HOME: ${{ env.ANDROID_HOME }}/ndk/27.0.12077973
         run: npm run tauri android build
 
-      - name: Sign APK
+      - name: Sign APK and AAB
         env:
           ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
           ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
@@ -120,7 +120,8 @@ jobs:
         run: |
           # Decode keystore from base64
           echo "$ANDROID_KEYSTORE" | base64 -d > release.keystore
-          # Sign the APK
+
+          # Sign the APK (for direct distribution)
           $ANDROID_HOME/build-tools/35.0.0/apksigner sign \
             --ks release.keystore \
             --ks-key-alias "$ANDROID_KEY_ALIAS" \
@@ -128,21 +129,39 @@ jobs:
             --key-pass pass:"$ANDROID_KEY_PASSWORD" \
             --out ConnectionPulse-android.apk \
             src-tauri/gen/android/app/build/outputs/apk/universal/release/app-universal-release-unsigned.apk
+
+          # Sign the AAB (for Play Store)
+          jarsigner -keystore release.keystore \
+            -storepass "$ANDROID_KEYSTORE_PASSWORD" \
+            -keypass "$ANDROID_KEY_PASSWORD" \
+            -signedjar ConnectionPulse-android.aab \
+            src-tauri/gen/android/app/build/outputs/bundle/universalRelease/app-universal-release.aab \
+            "$ANDROID_KEY_ALIAS"
+
           # Clean up keystore
           rm release.keystore
 
-      - name: Upload artifact (for test builds)
+      - name: Upload APK artifact (for test builds)
         if: ${{ github.event_name == 'workflow_dispatch' }}
         uses: actions/upload-artifact@v4
         with:
           name: ConnectionPulse-android.apk
           path: ConnectionPulse-android.apk
 
+      - name: Upload AAB artifact (for test builds)
+        if: ${{ github.event_name == 'workflow_dispatch' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: ConnectionPulse-android.aab
+          path: ConnectionPulse-android.aab
+
       - name: Upload to release
         if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
         uses: softprops/action-gh-release@v1
         with:
-          files: ConnectionPulse-android.apk
+          files: |
+            ConnectionPulse-android.apk
+            ConnectionPulse-android.aab
 
   build-ios:
     runs-on: macos-latest
@@ -165,7 +184,7 @@ jobs:
         run: npm run tauri ios init
 
       - name: Build iOS (Simulator)
-        run: npm run tauri ios build -- --target aarch64-apple-ios-sim
+        run: npm run tauri ios build -- --target aarch64-sim
 
       - name: Package iOS app
         run: |
@@ -202,6 +221,7 @@ jobs:
             | macOS Apple Silicon | `ConnectionPulse-macos-apple-silicon` | Experimental |
             | Linux | `ConnectionPulse-linux-x64` | Stable |
             | Android | `ConnectionPulse-android.apk` | Stable |
+            | Android (Play Store) | `ConnectionPulse-android.aab` | Stable |
             | iOS Simulator | `ConnectionPulse-ios-simulator.zip` | Experimental |
 
             ## Installation
@@ -217,6 +237,6 @@ jobs:
 
             Then make executable and run: `chmod +x ConnectionPulse-linux-x64 && ./ConnectionPulse-linux-x64`
 
-            **Android:** Download and install. You may need to enable "Install from unknown sources" in device settings.
+            **Android:** Download the APK and install. You may need to enable "Install from unknown sources" in device settings. (The AAB file is for Play Store publishing only.)
 
             **iOS Simulator:** Unzip and drag the .app to iOS Simulator (requires macOS with Xcode).
