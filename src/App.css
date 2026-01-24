@@ -868,8 +868,9 @@ footer {
     border-radius: 8px;
   }
 
+  /* Mobile: use neutral gray for delete button (red can be confused with bad connection status) */
   .actions-cell button.danger .btn-icon {
-    color: var(--danger-text);
+    color: var(--text-muted);
   }
 
   /* Modal: full width, top positioned */

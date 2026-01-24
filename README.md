@@ -4,18 +4,34 @@
 > Shared as-is, without guarantees.
 > Not intended for production use or supported deployment.
 
-A lightweight cross-platform desktop application for monitoring TCP connectivity to multiple servers. Built with Tauri, React, and Rust.
+A lightweight cross-platform application for monitoring TCP connectivity to multiple servers. Built with Tauri, React, and Rust.
 
-**Platforms:** Windows, macOS, Linux
+**Platforms:** Windows, macOS, Linux, Android, iOS
 
 ## Features
 
 - **TCP Probing**: Tests connectivity every 5 seconds per target
 - **Health Monitoring**: Categorizes targets as Optimal/Great/Good/Warn/Bad/Down based on success rate and latency
 - **Rolling Stats**: Average, p90 latency, and success rate over a 5-minute window
-- **Drag & Drop Reordering**: Rearrange targets by dragging rows
-- **Import/Export**: Save and load target configurations as JSON files
-- **Portable Mode**: Place `targets.json` next to the exe for portable storage
+- **Drag & Drop Reordering**: Rearrange targets by dragging (desktop) or using drag handle (mobile)
+- **Import/Export**: Save and load target configurations as JSON files (desktop)
+- **Portable Mode**: Place `targets.json` next to the exe for portable storage (desktop)
+- **Mobile Support**: Responsive card-based UI with touch-friendly controls
+- **System Theme**: Follows system light/dark mode preference
+- **Example Targets**: Quick-start with pre-configured example servers
+
+## Downloads
+
+Pre-built binaries are available on the [Releases](https://github.com/qqtcgp1/connection-pulse/releases) page:
+
+| Platform | File | Status |
+|----------|------|--------|
+| Windows | `connection-pulse.exe` | Stable |
+| macOS Intel | `ConnectionPulse-macos-intel` | Experimental |
+| macOS Apple Silicon | `ConnectionPulse-macos-apple-silicon` | Experimental |
+| Linux | `ConnectionPulse-linux-x64` | Stable |
+| Android | `ConnectionPulse-android.apk` | Stable |
+| iOS Simulator | `ConnectionPulse-ios-simulator.zip` | Experimental |
 
 ## Platform Support
 

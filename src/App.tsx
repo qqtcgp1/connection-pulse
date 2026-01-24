@@ -193,6 +193,24 @@ export default function App() {
     return () => clearTimeout(timeout);
   }, []);
 
+  // Mobile: refresh stats when app resumes from background
+  // (Android/iOS restrict network in background, causing stale "DOWN" states)
+  useEffect(() => {
+    if (!isMobile) return;
+
+    const handleVisibilityChange = () => {
+      if (!document.hidden) {
+        // App came to foreground - clear old stats so fresh probes show accurate state
+        setResults(new Map());
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [isMobile]);
+
   // Listen for probe updates
   useEffect(() => {
     const unlisten = listen<ProbeResult>("probe:update", (event) => {
