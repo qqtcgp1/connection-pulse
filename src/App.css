@@ -91,6 +91,7 @@ body {
 }
 
 .app {
+  position: relative;
   display: flex;
   flex-direction: column;
   min-height: 100vh;
@@ -143,6 +144,24 @@ header h1 {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+/* Load Examples button in header */
+.actions > .examples-btn {
+  width: auto;
+  padding: 0 16px;
+  font-size: 14px;
+  background: var(--accent-primary);
+  color: #fff;
+  border-color: var(--accent-primary);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+}
+
+.actions > .examples-btn:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
 }
 
 button {
@@ -269,6 +288,30 @@ main {
   margin: 8px 0;
 }
 
+.load-examples-btn {
+  margin-top: 16px;
+  padding: 12px 24px;
+  font-size: 16px;
+  background: var(--accent-primary);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.3);
+  transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+}
+
+.load-examples-btn:hover {
+  background: var(--accent-hover);
+  transform: scale(1.02);
+  box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+}
+
+.load-examples-btn:active {
+  transform: scale(0.98);
+}
+
 table {
   width: 100%;
   border-collapse: collapse;
@@ -372,7 +415,7 @@ footer {
 
 /* Modal */
 .modal-overlay {
-  position: fixed;
+  position: absolute;
   inset: 0;
   background: var(--modal-overlay);
   display: flex;
@@ -393,6 +436,21 @@ footer {
 .modal h2 {
   margin-bottom: 20px;
   font-size: 18px;
+}
+
+/* Confirm delete modal */
+.confirm-modal {
+  width: 320px;
+  text-align: center;
+}
+
+.confirm-modal p {
+  margin-bottom: 24px;
+  color: var(--text-secondary);
+}
+
+.confirm-modal .modal-actions {
+  justify-content: center;
 }
 
 .form-group {
@@ -540,9 +598,11 @@ footer {
 }
 
 /* ===========================================
-   MOBILE STYLES - Only affects small screens
+   MOBILE STYLES - Affects:
+   - Narrow screens (under 768px)
+   - Touch devices in landscape (under 1200px)
    =========================================== */
-@media (max-width: 768px) {
+@media (max-width: 768px), (pointer: coarse) and (max-width: 1200px) {
   .app {
     /* Safe area for notches/camera cutouts on mobile */
     padding: 12px;
@@ -619,8 +679,7 @@ footer {
     border: 1px solid var(--border-secondary);
     border-radius: 10px;
     padding: 12px;
-    /* Long-press to drag */
-    touch-action: none;
+    /* Disable text selection on cards */
     user-select: none;
     -webkit-user-select: none;
   }
@@ -666,9 +725,31 @@ footer {
     display: none;
   }
 
-  /* Hide drag handle on mobile - whole card is draggable via long-press */
+  /* Drag handle on mobile - positioned in card header */
   .drag-handle {
-    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    width: 40px;
+    color: var(--text-faint);
+    touch-action: none;
+    cursor: grab;
+  }
+
+  .drag-handle:active {
+    cursor: grabbing;
+    color: var(--text-secondary);
+  }
+
+  /* Card needs relative positioning for drag handle */
+  tr {
+    position: relative;
+    padding-left: 40px; /* Make room for drag handle */
   }
 
   /* Card header row: Name + Health */
@@ -793,9 +874,9 @@ footer {
 
   /* Modal: full width, top positioned */
   .modal-overlay {
-    align-items: flex-start;
+    align-items: center;
+    justify-content: center;
     padding: 16px;
-    padding-top: 40px;
     overflow-y: auto;
   }
 

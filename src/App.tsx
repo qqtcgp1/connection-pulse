@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { open, save, ask } from "@tauri-apps/plugin-dialog";
+import { open, save } from "@tauri-apps/plugin-dialog";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import type { Target, ProbeResult, TargetStats } from "./types";
 import { loadTargets, saveTargets, parseTargetsJson, getStorageInfo, StorageMode } from "./storage";
@@ -24,6 +24,15 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 
 const WINDOW_MS = 5 * 60 * 1000; // 5 minute rolling window
+
+const EXAMPLE_TARGETS: Omit<Target, "id">[] = [
+  { name: "Cloudflare", host: "1.1.1.1", port: 443 },
+  { name: "Netflix", host: "netflix.com", port: 443 },
+  { name: "Google DNS", host: "8.8.8.8", port: 53 },
+  { name: "YouTube", host: "youtube.com", port: 443 },
+  { name: "Microsoft Mail", host: "outlook.office365.com", port: 587 },
+  { name: "Google", host: "google.com", port: 443 },
+];
 
 function quantile(arr: number[], q: number): number | null {
   if (!arr.length) return null;
@@ -64,10 +73,9 @@ interface SortableRowProps {
   onRefresh: (id: string) => void;
   onEdit: (target: Target) => void;
   onDelete: (id: string) => void;
-  isMobile: boolean;
 }
 
-function SortableRow({ stat, onRefresh, onEdit, onDelete, isMobile }: SortableRowProps) {
+function SortableRow({ stat, onRefresh, onEdit, onDelete }: SortableRowProps) {
   const { target, successRate, average, p90, lastResult, health } = stat;
 
   const {
@@ -85,9 +93,9 @@ function SortableRow({ stat, onRefresh, onEdit, onDelete, isMobile }: SortableRo
     opacity: isDragging ? 0.5 : 1,
   };
 
-  // On mobile, apply drag listeners to entire row; on desktop, only to handle
-  const rowProps = isMobile ? { ...attributes, ...listeners } : {};
-  const handleProps = isMobile ? {} : { ...attributes, ...listeners };
+  // Apply drag listeners only to handle (both mobile and desktop)
+  const rowProps = {};
+  const handleProps = { ...attributes, ...listeners };
 
   return (
     <tr ref={setNodeRef} style={style} className={isDragging ? "dragging" : ""} {...rowProps}>
@@ -140,6 +148,7 @@ export default function App() {
   const [isMobile, setIsMobile] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [showSplash, setShowSplash] = useState(true); // Mobile splash screen
+  const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // dnd-kit sensors - pointer for mouse, touch for mobile
@@ -150,11 +159,13 @@ export default function App() {
   });
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
-      delay: 300, // 300ms long-press before drag starts
-      tolerance: 5,
+      delay: 500,
+      tolerance: 10,
     },
   });
-  const sensors = useSensors(pointerSensor, touchSensor);
+  // Use only TouchSensor on mobile, only PointerSensor on desktop
+  const mobileSensors = useSensors(touchSensor);
+  const desktopSensors = useSensors(pointerSensor);
 
   // Load targets and storage info on mount
   useEffect(() => {
@@ -172,6 +183,14 @@ export default function App() {
         setShowSplash(false);
       }
     })();
+  }, []);
+
+  // Splash screen timeout (max 2.5 seconds)
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      setShowSplash(false);
+    }, 2500);
+    return () => clearTimeout(timeout);
   }, []);
 
   // Listen for probe updates
@@ -249,24 +268,32 @@ export default function App() {
     setIsAdding(true);
   };
 
+  const handleLoadExamples = async () => {
+    const exampleTargets = EXAMPLE_TARGETS.map((t) => ({ ...t, id: generateId() }));
+    await handleSaveTargets(exampleTargets);
+  };
+
   const handleEditTarget = (target: Target) => {
     setEditingTarget({ ...target });
     setIsAdding(false);
   };
 
-  const handleDeleteTarget = async (id: string) => {
+  const handleDeleteTarget = (id: string) => {
     const target = targets.find((t) => t.id === id);
     const name = target?.name || "this target";
-    const confirmed = await ask(`Delete "${name}"?`, { title: "Confirm Delete", kind: "warning" });
-    if (!confirmed) return;
+    setDeleteConfirm({ id, name });
+  };
 
-    const newTargets = targets.filter((t) => t.id !== id);
+  const confirmDelete = async () => {
+    if (!deleteConfirm) return;
+    const newTargets = targets.filter((t) => t.id !== deleteConfirm.id);
     await handleSaveTargets(newTargets);
     setResults((prev) => {
       const next = new Map(prev);
-      next.delete(id);
+      next.delete(deleteConfirm.id);
       return next;
     });
+    setDeleteConfirm(null);
   };
 
   const handleSaveEdit = async () => {
@@ -399,7 +426,12 @@ export default function App() {
       <header>
         <h1>Connection Pulse</h1>
         <div className="actions">
-          <button onClick={handleAddTarget} title="Add Target">＋</button>
+          {targets.length === 0 && (
+            <button className="examples-btn" onClick={handleLoadExamples} title="Load Examples">
+              Load Examples
+            </button>
+          )}
+          <button onClick={handleAddTarget} title="Add Target">+</button>
           <button onClick={handleRefreshAll} disabled={targets.length === 0} title="Refresh All">↻</button>
           <button className="desktop-only" onClick={handleImportFile} title="Import JSON">↓</button>
           <button className="desktop-only" onClick={handleExportFile} disabled={targets.length === 0} title="Export JSON">↑</button>
@@ -457,15 +489,33 @@ export default function App() {
         </div>
       )}
 
+      {deleteConfirm && (
+        <div className="modal-overlay" onMouseDown={() => setDeleteConfirm(null)}>
+          <div className="modal confirm-modal" onMouseDown={(e) => e.stopPropagation()}>
+            <h2>Confirm Delete</h2>
+            <p>Delete "{deleteConfirm.name}"?</p>
+            <div className="modal-actions">
+              <button onClick={() => setDeleteConfirm(null)}>Cancel</button>
+              <button className="danger" onClick={confirmDelete}>
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <main>
         {targets.length === 0 ? (
           <div className="empty">
             <p>No targets configured.</p>
-            <p>Click "Add Target" or drag a JSON file to get started.</p>
+            <p>Click + to add a target, or try some examples:</p>
+            <button className="load-examples-btn" onClick={handleLoadExamples}>
+              Load Examples
+            </button>
           </div>
         ) : (
           <DndContext
-            sensors={sensors}
+            sensors={isMobile ? mobileSensors : desktopSensors}
             collisionDetection={closestCenter}
             onDragEnd={handleDragEnd}
           >
@@ -495,7 +545,6 @@ export default function App() {
                       onRefresh={handleRefresh}
                       onEdit={handleEditTarget}
                       onDelete={handleDeleteTarget}
-                      isMobile={isMobile}
                     />
                   ))}
                 </tbody>

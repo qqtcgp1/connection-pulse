@@ -188,7 +188,7 @@ jobs:
 
       - name: Package iOS app
         run: |
-          cd src-tauri/gen/apple/build/arm64-sim/release/bundle/ios
+          cd src-tauri/gen/apple/build/arm64-sim
           zip -r ConnectionPulse-ios-simulator.zip *.app
 
       - name: Upload artifact (for test builds)
@@ -196,13 +196,13 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ConnectionPulse-ios-simulator.zip
-          path: src-tauri/gen/apple/build/arm64-sim/release/bundle/ios/ConnectionPulse-ios-simulator.zip
+          path: src-tauri/gen/apple/build/arm64-sim/ConnectionPulse-ios-simulator.zip
 
       - name: Upload to release
         if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
         uses: softprops/action-gh-release@v1
         with:
-          files: src-tauri/gen/apple/build/arm64-sim/release/bundle/ios/ConnectionPulse-ios-simulator.zip
+          files: src-tauri/gen/apple/build/arm64-sim/ConnectionPulse-ios-simulator.zip
 
   release-notes:
     if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
