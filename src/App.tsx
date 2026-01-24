@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { open, save } from "@tauri-apps/plugin-dialog";
+import { open, save, ask } from "@tauri-apps/plugin-dialog";
 import { readTextFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import type { Target, ProbeResult, TargetStats } from "./types";
 import { loadTargets, saveTargets, parseTargetsJson, getStorageInfo, StorageMode } from "./storage";
@@ -64,9 +64,10 @@ interface SortableRowProps {
   onRefresh: (id: string) => void;
   onEdit: (target: Target) => void;
   onDelete: (id: string) => void;
+  isMobile: boolean;
 }
 
-function SortableRow({ stat, onRefresh, onEdit, onDelete }: SortableRowProps) {
+function SortableRow({ stat, onRefresh, onEdit, onDelete, isMobile }: SortableRowProps) {
   const { target, successRate, average, p90, lastResult, health } = stat;
 
   const {
@@ -84,9 +85,13 @@ function SortableRow({ stat, onRefresh, onEdit, onDelete }: SortableRowProps) {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  // On mobile, apply drag listeners to entire row; on desktop, only to handle
+  const rowProps = isMobile ? { ...attributes, ...listeners } : {};
+  const handleProps = isMobile ? {} : { ...attributes, ...listeners };
+
   return (
-    <tr ref={setNodeRef} style={style} className={isDragging ? "dragging" : ""}>
-      <td className="drag-handle" {...attributes} {...listeners} title="Drag to reorder">☰</td>
+    <tr ref={setNodeRef} style={style} className={isDragging ? "dragging" : ""} {...rowProps}>
+      <td className="drag-handle" {...handleProps} title="Drag to reorder">☰</td>
       <td data-label="Name">{target.name}</td>
       <td className="mono" data-label="Host:Port">
         {target.host}:{target.port}
@@ -145,7 +150,7 @@ export default function App() {
   });
   const touchSensor = useSensor(TouchSensor, {
     activationConstraint: {
-      delay: 200, // 200ms hold before drag starts on touch
+      delay: 300, // 300ms long-press before drag starts
       tolerance: 5,
     },
   });
@@ -250,6 +255,11 @@ export default function App() {
   };
 
   const handleDeleteTarget = async (id: string) => {
+    const target = targets.find((t) => t.id === id);
+    const name = target?.name || "this target";
+    const confirmed = await ask(`Delete "${name}"?`, { title: "Confirm Delete", kind: "warning" });
+    if (!confirmed) return;
+
     const newTargets = targets.filter((t) => t.id !== id);
     await handleSaveTargets(newTargets);
     setResults((prev) => {
@@ -389,14 +399,10 @@ export default function App() {
       <header>
         <h1>Connection Pulse</h1>
         <div className="actions">
-          <button onClick={handleAddTarget}>Add Target</button>
-          <button onClick={handleRefreshAll} disabled={targets.length === 0}>
-            Refresh All
-          </button>
-          <button className="desktop-only" onClick={handleImportFile}>Import JSON</button>
-          <button className="desktop-only" onClick={handleExportFile} disabled={targets.length === 0}>
-            Export JSON
-          </button>
+          <button onClick={handleAddTarget} title="Add Target">＋</button>
+          <button onClick={handleRefreshAll} disabled={targets.length === 0} title="Refresh All">↻</button>
+          <button className="desktop-only" onClick={handleImportFile} title="Import JSON">↓</button>
+          <button className="desktop-only" onClick={handleExportFile} disabled={targets.length === 0} title="Export JSON">↑</button>
         </div>
       </header>
 
@@ -489,6 +495,7 @@ export default function App() {
                       onRefresh={handleRefresh}
                       onEdit={handleEditTarget}
                       onDelete={handleDeleteTarget}
+                      isMobile={isMobile}
                     />
                   ))}
                 </tbody>
