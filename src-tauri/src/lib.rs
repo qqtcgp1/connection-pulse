@@ -104,6 +104,7 @@ async fn probe_target(host: String, port: u16) -> ProbeResult {
 fn start_probe_loop(app: AppHandle, state: Arc<AppState>) {
     tauri::async_runtime::spawn(async move {
         let mut ticker = interval(Duration::from_secs(5));
+        ticker.set_missed_tick_behavior(tokio::time::MissedTickBehavior::Skip);
 
         loop {
             ticker.tick().await;
