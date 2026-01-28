@@ -212,6 +212,13 @@ jobs:
       - uses: softprops/action-gh-release@v1
         with:
           body: |
+            ## What's New
+
+            - **ICMP Ping Support**: New probe type alongside TCP - choose between TCP connect or ICMP ping for each target
+            - **Type Selector**: Toggle between TCP and Ping modes in the add/edit dialog
+            - **Smart Display**: Ping targets show "ping hostname" instead of "hostname:port"
+            - **Version in Footer**: App now displays version number in the UI
+
             ## Downloads
 
             | Platform | File | Status |
