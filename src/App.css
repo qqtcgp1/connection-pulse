@@ -415,7 +415,7 @@ footer {
 
 /* Modal */
 .modal-overlay {
-  position: absolute;
+  position: fixed;
   inset: 0;
   background: var(--modal-overlay);
   display: flex;
@@ -477,6 +477,41 @@ footer {
 .form-group input:focus {
   outline: none;
   border-color: var(--accent-primary);
+}
+
+/* Type selector toggle */
+.type-selector {
+  display: flex;
+  gap: 0;
+  border: 1px solid var(--border-input);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.type-btn {
+  flex: 1;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 0;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.type-btn:hover {
+  background: var(--bg-hover);
+}
+
+.type-btn.active {
+  background: var(--accent-primary);
+  color: #fff;
+}
+
+.type-btn + .type-btn {
+  border-left: 1px solid var(--border-input);
 }
 
 .modal-actions {
@@ -784,7 +819,7 @@ footer {
 
   /* Assign grid positions */
   td[data-label="Name"] { grid-column: 1 / 3; grid-row: 1; }
-  td[data-label="Host:Port"] { grid-column: 1 / 6; grid-row: 2; }
+  td[data-label="Host:Port"], td[data-label="Host"] { grid-column: 1 / 6; grid-row: 2; }
   td[data-label="Health"] { grid-column: 5; grid-row: 1; }
   .actions-cell { grid-column: 3 / 5; grid-row: 1; justify-content: flex-end; }
 
@@ -906,6 +941,15 @@ footer {
     padding: 14px 12px;
     font-size: 16px; /* Prevents iOS zoom on focus */
     border-radius: 8px;
+  }
+
+  .type-selector {
+    border-radius: 8px;
+  }
+
+  .type-btn {
+    padding: 12px 16px;
+    font-size: 15px;
   }
 
   .modal-actions {

@@ -3,6 +3,7 @@ export interface Target {
   name: string;
   host: string;
   port: number;
+  probe_type: "tcp" | "ping";
 }
 
 export interface ProbeResult {

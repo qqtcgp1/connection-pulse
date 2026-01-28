@@ -26,12 +26,14 @@ import { CSS } from "@dnd-kit/utilities";
 const WINDOW_MS = 5 * 60 * 1000; // 5 minute rolling window
 
 const EXAMPLE_TARGETS: Omit<Target, "id">[] = [
-  { name: "Cloudflare", host: "1.1.1.1", port: 443 },
-  { name: "Netflix", host: "netflix.com", port: 443 },
-  { name: "Google DNS", host: "8.8.8.8", port: 53 },
-  { name: "YouTube", host: "youtube.com", port: 443 },
-  { name: "Microsoft Mail", host: "outlook.office365.com", port: 587 },
-  { name: "Google", host: "google.com", port: 443 },
+  { name: "Cloudflare", host: "1.1.1.1", port: 443, probe_type: "tcp" },
+  { name: "Netflix", host: "netflix.com", port: 443, probe_type: "tcp" },
+  { name: "Google DNS", host: "8.8.8.8", port: 53, probe_type: "tcp" },
+  { name: "YouTube", host: "youtube.com", port: 443, probe_type: "tcp" },
+  { name: "Cloudflare Ping", host: "1.1.1.1", port: 0, probe_type: "ping" },
+  { name: "Google Ping", host: "google.com", port: 0, probe_type: "ping" },
+  { name: "Microsoft Ping", host: "outlook.office365.com", port: 0, probe_type: "ping" },
+  { name: "Amazon", host: "amazon.com", port: 443, probe_type: "tcp" },
 ];
 
 function quantile(arr: number[], q: number): number | null {
@@ -101,8 +103,8 @@ function SortableRow({ stat, onRefresh, onEdit, onDelete }: SortableRowProps) {
     <tr ref={setNodeRef} style={style} className={isDragging ? "dragging" : ""} {...rowProps}>
       <td className="drag-handle" {...handleProps} title="Drag to reorder">☰</td>
       <td data-label="Name">{target.name}</td>
-      <td className="mono" data-label="Host:Port">
-        {target.host}:{target.port}
+      <td className="mono" data-label={target.probe_type === "ping" ? "Host" : "Host:Port"}>
+        {target.probe_type === "ping" ? `ping ${target.host}` : `${target.host}:${target.port}`}
       </td>
       <td data-label="Health">
         <span className={`pill ${health}`}>
@@ -282,7 +284,7 @@ export default function App() {
   }, []);
 
   const handleAddTarget = () => {
-    setEditingTarget({ id: generateId(), name: "", host: "", port: 443 });
+    setEditingTarget({ id: generateId(), name: "", host: "", port: 443, probe_type: "tcp" });
     setIsAdding(true);
   };
 
@@ -316,26 +318,32 @@ export default function App() {
 
   const handleSaveEdit = async () => {
     if (!editingTarget) return;
-    if (!editingTarget.name || !editingTarget.host || !editingTarget.port) return;
+    if (!editingTarget.name || !editingTarget.host) return;
+    if (editingTarget.probe_type === "tcp" && !editingTarget.port) return;
+
+    // Ensure ping targets have port 0
+    const targetToSave = editingTarget.probe_type === "ping"
+      ? { ...editingTarget, port: 0 }
+      : editingTarget;
 
     let newTargets: Target[];
     let shouldClearStats = false;
 
     if (isAdding) {
-      newTargets = [...targets, editingTarget];
+      newTargets = [...targets, targetToSave];
     } else {
-      // Check if host or port changed
-      const oldTarget = targets.find((t) => t.id === editingTarget.id);
-      if (oldTarget && (oldTarget.host !== editingTarget.host || oldTarget.port !== editingTarget.port)) {
+      // Check if host, port, or probe_type changed
+      const oldTarget = targets.find((t) => t.id === targetToSave.id);
+      if (oldTarget && (oldTarget.host !== targetToSave.host || oldTarget.port !== targetToSave.port || oldTarget.probe_type !== targetToSave.probe_type)) {
         shouldClearStats = true;
       }
-      newTargets = targets.map((t) => (t.id === editingTarget.id ? editingTarget : t));
+      newTargets = targets.map((t) => (t.id === targetToSave.id ? targetToSave : t));
     }
 
     if (shouldClearStats) {
       setResults((prev) => {
         const next = new Map(prev);
-        next.delete(editingTarget.id);
+        next.delete(targetToSave.id);
         return next;
       });
     }
@@ -463,6 +471,25 @@ export default function App() {
           <div className="modal" onMouseDown={(e) => e.stopPropagation()}>
             <h2>{isAdding ? "Add Target" : "Edit Target"}</h2>
             <div className="form-group">
+              <label>Type</label>
+              <div className="type-selector">
+                <button
+                  className={`type-btn ${editingTarget.probe_type === "tcp" ? "active" : ""}`}
+                  onClick={() => setEditingTarget({ ...editingTarget, probe_type: "tcp", port: editingTarget.probe_type === "ping" ? 443 : editingTarget.port })}
+                  type="button"
+                >
+                  TCP
+                </button>
+                <button
+                  className={`type-btn ${editingTarget.probe_type === "ping" ? "active" : ""}`}
+                  onClick={() => setEditingTarget({ ...editingTarget, probe_type: "ping", port: 0 })}
+                  type="button"
+                >
+                  Ping
+                </button>
+              </div>
+            </div>
+            <div className="form-group">
               <label>Name</label>
               <input
                 type="text"
@@ -481,22 +508,24 @@ export default function App() {
                 autoComplete="off"
                 value={editingTarget.host}
                 onChange={(e) => setEditingTarget({ ...editingTarget, host: e.target.value })}
-                placeholder="e.g., 8.8.8.8 or example.com"
+                placeholder={editingTarget.probe_type === "ping" ? "e.g., 8.8.8.8 or example.com" : "e.g., 8.8.8.8 or example.com"}
               />
             </div>
-            <div className="form-group">
-              <label>Port</label>
-              <input
-                type="number"
-                inputMode="numeric"
-                autoComplete="off"
-                value={editingTarget.port}
-                onChange={(e) =>
-                  setEditingTarget({ ...editingTarget, port: parseInt(e.target.value) || 0 })
-                }
-                placeholder="e.g., 443"
-              />
-            </div>
+            {editingTarget.probe_type === "tcp" && (
+              <div className="form-group">
+                <label>Port</label>
+                <input
+                  type="number"
+                  inputMode="numeric"
+                  autoComplete="off"
+                  value={editingTarget.port}
+                  onChange={(e) =>
+                    setEditingTarget({ ...editingTarget, port: parseInt(e.target.value) || 0 })
+                  }
+                  placeholder="e.g., 443"
+                />
+              </div>
+            )}
             <div className="modal-actions">
               <button onClick={handleCancelEdit}>Cancel</button>
               <button className="primary" onClick={handleSaveEdit}>
@@ -592,7 +621,7 @@ export default function App() {
         <div className="info-panel">
           <h3>How It Works</h3>
           <ul>
-            <li><strong>Probing:</strong> TCP connect test every 5 seconds per target</li>
+            <li><strong>Probing:</strong> TCP connect or ICMP ping test every 5 seconds per target</li>
             <li><strong>Stats:</strong> Calculated over a 5-minute rolling window</li>
             <li><strong>Health:</strong> Based on success rate, average latency, and p90 latency</li>
           </ul>

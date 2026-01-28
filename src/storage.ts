@@ -55,7 +55,10 @@ export async function loadTargets(): Promise<Target[]> {
       return DEFAULT_TARGETS;
     }
     const txt = await readTextFile(path);
-    const targets = JSON.parse(txt) as Target[];
+    const targets = (JSON.parse(txt) as Target[]).map((t) => ({
+      ...t,
+      probe_type: t.probe_type || "tcp",
+    })) as Target[];
     // If file exists but is empty array, return defaults
     if (targets.length === 0) {
       await writeTextFile(path, JSON.stringify(DEFAULT_TARGETS, null, 2));
@@ -81,13 +84,15 @@ export function parseTargetsJson(text: string): Target[] | null {
   try {
     const data = JSON.parse(text);
     if (!Array.isArray(data)) return null;
-    return data.filter(
-      (t) =>
-        typeof t.id === "string" &&
-        typeof t.name === "string" &&
-        typeof t.host === "string" &&
-        typeof t.port === "number"
-    );
+    return data
+      .filter(
+        (t) =>
+          typeof t.id === "string" &&
+          typeof t.name === "string" &&
+          typeof t.host === "string" &&
+          typeof t.port === "number"
+      )
+      .map((t) => ({ ...t, probe_type: t.probe_type || "tcp" }));
   } catch {
     return null;
   }
