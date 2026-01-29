@@ -6,11 +6,11 @@ on:
       - 'v*'
   workflow_dispatch:
     inputs:
-      skip_release:
-        description: 'Skip release (test build only)'
+      tag:
+        description: 'Tag to create release for (e.g., v1.0.6). Leave empty for test build only.'
         required: false
-        default: true
-        type: boolean
+        default: ''
+        type: string
       build_desktop:
         description: 'Build Desktop (Windows/macOS/Linux)'
         required: false
@@ -85,10 +85,17 @@ jobs:
           name: ${{ matrix.name }}
           path: ${{ matrix.name }}
 
-      - name: Upload to release
+      - name: Upload to release (tag push)
         if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
         uses: softprops/action-gh-release@v1
         with:
+          files: ${{ matrix.name }}
+
+      - name: Upload to release (manual)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tag != '' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ inputs.tag }}
           files: ${{ matrix.name }}
 
   build-android:
@@ -172,10 +179,19 @@ jobs:
           name: ConnectionPulse-android.aab
           path: ConnectionPulse-android.aab
 
-      - name: Upload to release
+      - name: Upload to release (tag push)
         if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
         uses: softprops/action-gh-release@v1
         with:
+          files: |
+            ConnectionPulse-android.apk
+            ConnectionPulse-android.aab
+
+      - name: Upload to release (manual)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tag != '' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ inputs.tag }}
           files: |
             ConnectionPulse-android.apk
             ConnectionPulse-android.aab
@@ -216,10 +232,17 @@ jobs:
           name: ConnectionPulse-ios-simulator.zip
           path: src-tauri/gen/apple/build/arm64-sim/ConnectionPulse-ios-simulator.zip
 
-      - name: Upload to release
+      - name: Upload to release (tag push)
         if: ${{ github.event_name == 'push' && startsWith(github.ref, 'refs/tags/') }}
         uses: softprops/action-gh-release@v1
         with:
+          files: src-tauri/gen/apple/build/arm64-sim/ConnectionPulse-ios-simulator.zip
+
+      - name: Upload to release (manual)
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.tag != '' }}
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ inputs.tag }}
           files: src-tauri/gen/apple/build/arm64-sim/ConnectionPulse-ios-simulator.zip
 
   release-notes:
