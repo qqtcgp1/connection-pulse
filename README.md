@@ -10,7 +10,7 @@ A lightweight cross-platform application for monitoring TCP connectivity to mult
 
 ## Features
 
-- **TCP Probing**: Tests connectivity every 5 seconds per target
+- **TCP & ICMP Probing**: Choose between TCP connect or ICMP ping for each target (ping not available on iOS)
 - **Health Monitoring**: Categorizes targets as Optimal/Great/Good/Warn/Bad/Down based on success rate and latency
 - **Rolling Stats**: Average, p90 latency, and success rate over a 5-minute window
 - **Drag & Drop Reordering**: Rearrange targets by dragging (desktop) or using drag handle (mobile)

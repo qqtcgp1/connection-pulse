@@ -11,12 +11,28 @@ on:
         required: false
         default: true
         type: boolean
+      build_desktop:
+        description: 'Build Desktop (Windows/macOS/Linux)'
+        required: false
+        default: true
+        type: boolean
+      build_android:
+        description: 'Build Android'
+        required: false
+        default: true
+        type: boolean
+      build_ios:
+        description: 'Build iOS'
+        required: false
+        default: true
+        type: boolean
 
 permissions:
   contents: write
 
 jobs:
   build-desktop:
+    if: ${{ github.event_name == 'push' || inputs.build_desktop }}
     strategy:
       fail-fast: false
       matrix:
@@ -76,6 +92,7 @@ jobs:
           files: ${{ matrix.name }}
 
   build-android:
+    if: ${{ github.event_name == 'push' || inputs.build_android }}
     runs-on: ubuntu-latest
 
     steps:
@@ -164,6 +181,7 @@ jobs:
             ConnectionPulse-android.aab
 
   build-ios:
+    if: ${{ github.event_name == 'push' || inputs.build_ios }}
     runs-on: macos-latest
 
     steps:

@@ -627,7 +627,7 @@ export default function App() {
         <div className="info-panel">
           <h3>How It Works</h3>
           <ul>
-            <li><strong>Probing:</strong> TCP connect or ICMP ping test every 5 seconds per target</li>
+            <li><strong>Probing:</strong> TCP connect or ICMP ping test every 5 seconds per target{isIOS && " (ping unavailable on iOS)"}</li>
             <li><strong>Stats:</strong> Calculated over a 5-minute rolling window</li>
             <li><strong>Health:</strong> Based on success rate, average latency, and p90 latency</li>
           </ul>

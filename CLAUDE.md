@@ -1,7 +1,9 @@
 # Network Tester - AI Agent Instructions
 
 ## Project Overview
-A Tauri desktop app that performs TCP connectivity tests (tcping) from the client machine to multiple IP:port targets. Built for trading software network monitoring where reliability and latency matter.
+A Tauri cross-platform app that performs TCP connectivity tests (tcping) and ICMP ping from the client machine to multiple IP:port targets. Built for trading software network monitoring where reliability and latency matter.
+
+**Note:** ICMP ping is not available on iOS due to platform sandboxing restrictions. The ping option is hidden on iOS.
 
 ## Tech Stack
 - **Backend**: Rust + Tauri v2
