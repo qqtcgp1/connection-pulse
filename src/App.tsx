@@ -148,6 +148,7 @@ export default function App() {
   const [storageMode, setStorageMode] = useState<StorageMode>("appdata");
   const [storagePath, setStoragePath] = useState<string>("");
   const [isMobile, setIsMobile] = useState(false);
+  const [isIOS, setIsIOS] = useState(false);
   const [showInfo, setShowInfo] = useState(false);
   const [showSplash, setShowSplash] = useState(true); // Mobile splash screen
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string } | null>(null);
@@ -174,6 +175,7 @@ export default function App() {
     (async () => {
       const os = await platform();
       setIsMobile(os === "android" || os === "ios");
+      setIsIOS(os === "ios");
       const info = await getStorageInfo();
       setStorageMode(info.mode);
       setStoragePath(info.path);
@@ -289,7 +291,9 @@ export default function App() {
   };
 
   const handleLoadExamples = async () => {
-    const exampleTargets = EXAMPLE_TARGETS.map((t) => ({ ...t, id: generateId() }));
+    // Filter out ping targets on iOS (ICMP not supported)
+    const examples = isIOS ? EXAMPLE_TARGETS.filter((t) => t.probe_type !== "ping") : EXAMPLE_TARGETS;
+    const exampleTargets = examples.map((t) => ({ ...t, id: generateId() }));
     await handleSaveTargets(exampleTargets);
   };
 
@@ -480,13 +484,15 @@ export default function App() {
                 >
                   TCP
                 </button>
-                <button
-                  className={`type-btn ${editingTarget.probe_type === "ping" ? "active" : ""}`}
-                  onClick={() => setEditingTarget({ ...editingTarget, probe_type: "ping", port: 0 })}
-                  type="button"
-                >
-                  Ping
-                </button>
+                {!isIOS && (
+                  <button
+                    className={`type-btn ${editingTarget.probe_type === "ping" ? "active" : ""}`}
+                    onClick={() => setEditingTarget({ ...editingTarget, probe_type: "ping", port: 0 })}
+                    type="button"
+                  >
+                    Ping
+                  </button>
+                )}
               </div>
             </div>
             <div className="form-group">
