@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Tag to create release for (e.g., v1.0.6). Leave empty for test build only.'
+        description: 'Tag to create release for (e.g., v1.0.7). Leave empty for test build only.'
         required: false
         default: ''
         type: string

@@ -609,7 +609,7 @@ export default function App() {
 
       <footer>
         <div className="footer-left">
-          <span>v1.0.5 • Probing every 5s • Window: 5min</span>
+          <span>v1.0.7 • Probing every 5s • Window: 5min</span>
           {!isMobile && (
             <span className="storage-info">
               {storageMode === "portable"
