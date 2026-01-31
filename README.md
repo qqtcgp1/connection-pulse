@@ -45,7 +45,7 @@ Built with [Tauri](https://tauri.app/), the app uses each platform's native webv
 | Android | Android WebView | Requires Android Studio + NDK to build |
 | iOS | WKWebView | Requires Xcode + macOS to build |
 
-**Mobile:** The app can be built for Android/iOS with `npm run tauri android build` or `npm run tauri ios build`. The UI includes a responsive mobile layout with card-based design, compact stats grid, and touch-friendly icon buttons.
+**Mobile:** The app can be built for Android/iOS with `npm run tauri android build` or `npm run tauri ios build`. The UI includes a responsive mobile layout with card-based design, compact stats grid, and touch-friendly icon buttons. Note: Probing only runs while the app is in the foreground; ICMP ping is not available on iOS.
 
 ### Linux Installation
 

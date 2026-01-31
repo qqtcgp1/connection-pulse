@@ -22,7 +22,7 @@ Single native process with embedded WebView (not separate backend/frontend proce
 ### Rust Backend (`src-tauri/`)
 - `src/lib.rs` - Main app logic:
   - `tcp_probe()` - TCP connect test with timeout
-  - `start_probe_loop()` - Background task probing all targets every 5 seconds
+  - `start_probe_loop()` - Background task probing all targets every 5 seconds (on mobile, only while app is in foreground)
   - Tauri commands: `get_targets`, `set_targets`, `probe_target`
   - Emits `probe:update` events to frontend
 

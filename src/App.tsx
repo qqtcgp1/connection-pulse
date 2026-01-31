@@ -609,7 +609,7 @@ export default function App() {
 
       <footer>
         <div className="footer-left">
-          <span>v1.0.7 • Probing every 5s • Window: 5min</span>
+          <span>v1.0.7 • {isMobile ? "Probing every 5s while open" : "Probing every 5s"} • Window: 5min</span>
           {!isMobile && (
             <span className="storage-info">
               {storageMode === "portable"
@@ -627,7 +627,7 @@ export default function App() {
         <div className="info-panel">
           <h3>How It Works</h3>
           <ul>
-            <li><strong>Probing:</strong> TCP connect or ICMP ping test every 5 seconds per target{isIOS && " (ping unavailable on iOS)"}</li>
+            <li><strong>Probing:</strong> {isIOS ? "TCP connect test at 5-second intervals while app is open" : isMobile ? "TCP connect or ICMP ping at 5-second intervals while app is open" : "TCP connect or ICMP ping test every 5 seconds per target"}</li>
             <li><strong>Stats:</strong> Calculated over a 5-minute rolling window</li>
             <li><strong>Health:</strong> Based on success rate, average latency, and p90 latency</li>
           </ul>

@@ -12,7 +12,7 @@ Connection Pulse is a lightweight network monitoring tool that tests TCP connect
 
 **Key Features:**
 
-• Real-time TCP probing - Tests connectivity every 5 seconds
+• Real-time TCP probing - Tests connectivity at 5-second intervals while the app is open
 • Health status badges - Instantly see if servers are Optimal, Great, Good, Warning, Bad, or Down
 • Latency tracking - View average and p90 latency over a rolling 5-minute window
 • Success rate monitoring - Track connection reliability as a percentage
